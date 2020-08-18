@@ -32,6 +32,7 @@ type User struct {
 	ID                uint64 `json:"id"`
 	Login             string `json:"login"`
 	Username          string `json:"username"`
+	Email             string `json:"email"`
 	Password          string `json:"password"`
 	EncriptedPassword string `json:"encpass"`
 }
@@ -56,7 +57,8 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := u.AuthMethod()
+	token, err := u.authMethod()
+	u.refreshToken(token)
 	if err != nil {
 		log.Print(err)
 		return
@@ -67,8 +69,29 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (u *User) AuthMethod() (string, error) {
+func (u *User) refreshToken(token string) {
+	db, err := sql.Open(config.DBConnect())
+	if err != nil {
+		return
+	}
+	defer db.Close()
+
+	_, err = db.Exec(`update users set token = $1
+	where login = $2`, token, u.Login)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+}
+
+func createhToken() {
+
+}
+
+func (u *User) authMethod() (string, error) {
 	user := User{}
+
 	db, err := sql.Open(config.DBConnect())
 	if err != nil {
 		return "", err
@@ -99,6 +122,8 @@ func (u *User) AuthMethod() (string, error) {
 
 }
 
+// CreatToken code from
+//https://www.nexmo.com/blog/2020/03/13/using-jwt-for-authentication-in-a-golang-application-dr
 func CreatToken(userid uint64) (string, error) {
 	os.Setenv("ACCESS_SECRET", "wefghjmsdfg") // this should be in an env file
 	atClaims := jwt.MapClaims{}
