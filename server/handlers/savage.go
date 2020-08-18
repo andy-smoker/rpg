@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"rpg/server/config"
 
 	"rpg/server/models"
 )
@@ -18,7 +19,7 @@ func GetAllSWChars(w http.ResponseWriter, r *http.Request) {
 	}
 
 	chars := []models.CharShit{}
-	db, err := sql.Open(dbConfig())
+	db, err := sql.Open(config.DBConnect())
 	if err != nil {
 		log.Println(err)
 		return

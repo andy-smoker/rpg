@@ -1,27 +1,23 @@
 package config
 
 import (
+	"flag"
 	"fmt"
 )
 
+var (
+	dbUser = flag.String("user", "user", "Enterg you postgres username")
+	dbPass = flag.String("password", "pass", "")
+	dbName = flag.String("database", "", "databeses name")
+)
+
 type DBconfig struct {
-	User     string
-	Password string
-	DBname   string
-	SSLmode  string
+	DriverName string
+	Config     string
 }
 
-func NewDBconfig() DBconfig {
-	return DBconfig{
-		User:     "user",
-		Password: "password",
-		DBname:   "database",
-		SSLmode:  "disable",
-	}
-}
-
-func (conf *DBconfig) Connect() (string, string) {
+func DBConnect() (string, string) {
 	driverName := "postgres"
-	sqlConf := fmt.Sprint("user=$1 password=$2 dbname=$3 sslmode=disable", conf.User, conf.Password, conf.DBname)
-	return driverName, sqlConf
+	config := fmt.Sprint("user=$1 password=$2 dbname=$3 sslmode=disable", dbUser, dbPass, dbName)
+	return driverName, config
 }
