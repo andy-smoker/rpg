@@ -19,7 +19,6 @@ func DBConnect() (string, string) {
 		fmt.Println(err)
 		return "", ""
 	}
-	fmt.Println(config)
 	driverName := "postgres"
 	conn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", config.User, config.Pass, config.DB)
 	return driverName, conn
