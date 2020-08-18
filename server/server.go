@@ -1,9 +1,12 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"rpg/server/auth"
+	"rpg/server/config"
+
 	"rpg/server/handlers"
 	"time"
 
@@ -21,18 +24,19 @@ func RunServ() {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-
+	fmt.Println(config.DBConnect())
 	log.Fatal(srv.ListenAndServe())
+
 }
 
 // Router .
 func Router(r *mux.Router) {
-	r.HandleFunc("/", HH)
-	r.HandleFunc("/characters", GetAllCharshits).Methods("GET")
+
+	r.HandleFunc("/characters", handlers.GetAllCharshits).Methods("GET")
 	r.HandleFunc("/auth", auth.AuthHandler).Methods("POST")
-	r.HandleFunc("/sw/chars", handlers.GetAllSWChars)
-	r.HandleFunc("/characters/ch{id}", GetCharhit)
-	r.HandleFunc("/characters/ch{id}/del", nil)
-	r.HandleFunc("/characters/add", AddCharshit)
+	r.HandleFunc("/{core}/chars", handlers.SWgetAllChars)
+	r.HandleFunc("/{core}/chars/ch{id}", handlers.GetChar)
+	r.HandleFunc("/{core}/chars/ch{id}/del", nil)
+	r.HandleFunc("/{core}/chars/add", handlers.AddCharshit)
 
 }

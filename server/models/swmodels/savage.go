@@ -1,4 +1,4 @@
-package core
+package swmodels
 
 // Char .
 type Char struct {

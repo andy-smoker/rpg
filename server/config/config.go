@@ -1,23 +1,26 @@
 package config
 
 import (
-	"flag"
 	"fmt"
+
+	"github.com/BurntSushi/toml"
 )
 
-var (
-	dbUser = flag.String("user", "user", "Enterg you postgres username")
-	dbPass = flag.String("password", "pass", "")
-	dbName = flag.String("database", "", "databeses name")
-)
-
-type DBconfig struct {
-	DriverName string
-	Config     string
+type DBConfig struct {
+	User string `toml:"user"`
+	Pass string `toml:"pass"`
+	DB   string `toml:"db"`
 }
 
 func DBConnect() (string, string) {
+	config := DBConfig{}
+	_, err := toml.DecodeFile("config.toml", &config)
+	if err != nil {
+		fmt.Println(err)
+		return "", ""
+	}
+	fmt.Println(config)
 	driverName := "postgres"
-	config := fmt.Sprint("user=$1 password=$2 dbname=$3 sslmode=disable", dbUser, dbPass, dbName)
-	return driverName, config
+	conn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", config.User, config.Pass, config.DB)
+	return driverName, conn
 }

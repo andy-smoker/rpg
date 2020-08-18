@@ -6,12 +6,16 @@ import (
 	"log"
 	"net/http"
 	"rpg/server/config"
+	"rpg/server/models/swmodels"
 
 	"rpg/server/models"
+
+	//pq - postgres framework
+	_ "github.com/lib/pq"
 )
 
-// GetAllSWChars send all charshit response
-func GetAllSWChars(w http.ResponseWriter, r *http.Request) {
+// SWgetAllChars send all charshit response
+func SWgetAllChars(w http.ResponseWriter, r *http.Request) {
 	err := CheckToken(r)
 	if err != nil {
 		log.Println(err)
@@ -49,4 +53,39 @@ func GetAllSWChars(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(data)
+}
+
+// SWgetChar method for marshal and get data
+func SWgetChar(id string) []byte {
+
+	chsh := models.CharShit{}
+	sw := swmodels.Char{}
+	db, err := sql.Open(config.DBConnect())
+	if err != nil {
+		log.Println(err)
+	}
+	defer db.Close()
+	rows, err := db.Query("select * from chars where id = $1", id)
+	if err != nil {
+		log.Println(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		arr := []uint8{}
+		err := rows.Scan(&chsh.ID, &chsh.Name, &arr, &sw.Rank)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		for i := range arr {
+			sw.Skills = append(sw.Skills, i)
+		}
+	}
+	chsh.Core = sw
+	data, err := json.Marshal(chsh)
+	if err != nil {
+		log.Println(err)
+	}
+	return data
 }
