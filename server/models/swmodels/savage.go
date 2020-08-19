@@ -1,7 +1,9 @@
 package swmodels
 
 // Char .
-type Char struct {
+type SWChar struct {
+	ID         int       `json:"id"`
+	Name       string    `json:"name"`
 	Concept    string    `json:"concept"`
 	Look       string    `json:"look"`
 	Exp        int       `json:"exp"`

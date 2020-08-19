@@ -45,7 +45,7 @@ func AddToDB(data interface{}) {
 
 // GetAllCharshits send all charshit response
 func GetAllCharshits(w http.ResponseWriter, r *http.Request) {
-	chars := []models.CharShit{}
+	chars := []swmodels.SWChar{}
 	sqlConf := "user=rest password=rest dbname=rpg sslmode=disable"
 	db, err := sql.Open("postgres", sqlConf)
 	if err != nil {
@@ -58,9 +58,8 @@ func GetAllCharshits(w http.ResponseWriter, r *http.Request) {
 	}
 	for rows.Next() {
 		arr := []uint8{}
-		chsh := models.CharShit{}
-		sw := swmodels.Char{}
-		err := rows.Scan(&chsh.ID, &chsh.Name, &arr, &sw.Rank)
+		sw := swmodels.SWChar{}
+		err := rows.Scan(&sw.ID, &sw.Name, &arr, &sw.Rank)
 		if err != nil {
 			log.Fatal(err)
 			continue
@@ -69,8 +68,7 @@ func GetAllCharshits(w http.ResponseWriter, r *http.Request) {
 			sw.Skills = append(sw.Skills, i)
 		}
 
-		chsh.Core = sw
-		chars = append(chars, chsh)
+		chars = append(chars, sw)
 		fmt.Println(sw.Skills)
 	}
 	data, err := json.Marshal(chars)

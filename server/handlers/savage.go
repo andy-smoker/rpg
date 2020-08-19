@@ -9,9 +9,6 @@ import (
 	"rpg/server/models/swmodels"
 
 	"rpg/server/models"
-
-	//pq - postgres framework
-	_ "github.com/lib/pq"
 )
 
 // SWgetAllChars send all charshit response
@@ -21,7 +18,6 @@ func SWgetAllChars(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-
 	chars := []models.CharShit{}
 	db, err := sql.Open(config.DBConnect())
 	if err != nil {
@@ -30,7 +26,7 @@ func SWgetAllChars(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query(`select id from savage_world_chars, sw_char_stats`)
+	rows, err := db.Query(`select id from savage_world_chars`)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -39,7 +35,6 @@ func SWgetAllChars(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 	for rows.Next() {
 		char := models.CharShit{}
-		//core := core.Char{}
 		err := rows.Scan(&char.ID)
 		if err != nil {
 			log.Fatal(err)
@@ -58,8 +53,8 @@ func SWgetAllChars(w http.ResponseWriter, r *http.Request) {
 // SWgetChar method for marshal and get data
 func SWgetChar(id string) []byte {
 
-	chsh := models.CharShit{}
-	sw := swmodels.Char{}
+	char := swmodels.SWChar{}
+
 	db, err := sql.Open(config.DBConnect())
 	if err != nil {
 		log.Println(err)
@@ -73,17 +68,17 @@ func SWgetChar(id string) []byte {
 
 	for rows.Next() {
 		arr := []uint8{}
-		err := rows.Scan(&chsh.ID, &chsh.Name, &arr, &sw.Rank)
+		err := rows.Scan(&char.ID, &char.Name, &arr, &char.Rank)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 		for i := range arr {
-			sw.Skills = append(sw.Skills, i)
+			char.Skills = append(char.Skills, i)
 		}
 	}
-	chsh.Core = sw
-	data, err := json.Marshal(chsh)
+
+	data, err := json.Marshal(char)
 	if err != nil {
 		log.Println(err)
 	}

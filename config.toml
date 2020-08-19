@@ -1,7 +1,7 @@
 [db]
-user = "user"
-pass = "pass"
-db = "db"
+user = "rest"
+pass = "rest"
+db = "rpg"
 
 [client]
 addr = "localhost"
