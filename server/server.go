@@ -1,30 +1,12 @@
 package server
 
 import (
-	"log"
-	"net/http"
 	"rpg/server/auth"
 
 	"rpg/server/handlers"
-	"time"
 
 	"github.com/gorilla/mux"
 )
-
-// RunServ .
-func RunServ() {
-	router := mux.NewRouter()
-	Router(router)
-
-	srv := &http.Server{
-		Handler:      router,
-		Addr:         ":8080",
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
-	}
-	log.Fatal(srv.ListenAndServe())
-
-}
 
 // Router .
 func Router(r *mux.Router) {

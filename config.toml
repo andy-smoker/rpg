@@ -1,4 +1,8 @@
-
+[db]
 user = "user"
 pass = "pass"
 db = "db"
+
+[client]
+addr = "localhost"
+port = "8080"
