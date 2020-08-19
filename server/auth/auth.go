@@ -37,12 +37,14 @@ type User struct {
 	EncriptedPassword string `json:"encpass"`
 }
 
+// Session .
 type Session struct {
 	User  string
 	Token string
 	Time  string
 }
 
+// AuthHandler .
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	u := User{}
 	defer r.Body.Close()
