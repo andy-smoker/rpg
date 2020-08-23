@@ -81,8 +81,8 @@ type Stat struct {
 }
 
 type Skill struct {
-	Name  string
-	Value int
+	Name  string `json:"name"`
+	Value int    `json:"value"`
 }
 
 // NewSkill - create new skill

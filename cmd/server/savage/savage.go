@@ -7,26 +7,49 @@ import (
 	"log"
 	"net/http"
 	"server/database"
+
+	"github.com/gorilla/mux"
+
+	_ "github.com/lib/pq"
 )
 
-type DbConn struct {
+type DB struct {
+	driver       string
 	dbsourceName string
 }
 
-func SWstart() {
+var dbsourceName string
+
+func DataConn(d database.DB) {
+
+	dbsourceName = fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", d.User, d.Pass, d.DB)
 
 }
 
-func SWConnDB(d database.DB) {
-	//dbsourceName = fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", d.User, d.Pass, d.DB)
-	fmt.Printf("user=%s password=%s dbname=%s sslmode=disable", d.User, d.Pass, d.DB)
+// CharID .
+func CharID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "json")
+	vars := mux.Vars(r)
+	switch r.Method {
+	case "GET":
+		w.Write(SWgetChar(vars["id"]))
+		break
+	case "PUT":
+		fmt.Println("PUT method")
+		break
+	case "DELETE":
+		fmt.Println("DELETE method")
+		break
+	}
+
 }
 
-/*/ SWgetChar method for marshal and get data
+// SWgetChar method for marshal and get data
 func SWgetChar(id string) []byte {
-	fmt.Println(dbsourceName)
 	char := SWChar{}
-	db, err := sql.Open("postgresql", dbsourceName)
+	//
+
+	db, err := sql.Open("postgres", dbsourceName)
 	if err != nil {
 		log.Println(err)
 	}
@@ -39,25 +62,22 @@ func SWgetChar(id string) []byte {
 
 	for rows.Next() {
 
-		err := rows.Scan(&char.ID, &char.Name, &char.Rank)
+		err := rows.Scan(&char.Name, &char.Rank)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-
 	}
-
 	data, err := json.Marshal(char)
 	if err != nil {
 		log.Println(err)
 	}
 	return data
-}*/
+}
 
 // AddCharshit .
 func AddCharshit(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Content-Type", "json")
 	db, err := sql.Open("sqlite3", "database.db")
 	if err != nil {
 		log.Println(err)
@@ -72,7 +92,7 @@ func AddCharshit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := db.Exec("insert into charshit(name)values($1)", v.Name)
+	res, err := db.Exec("insert into charshit(name,rank)values($1)", v.Name, v.Rank)
 	if err != nil {
 		log.Println(err)
 		return

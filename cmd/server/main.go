@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 	"server/database"
-	"server/handlers"
+	savage "server/savage"
 
 	"time"
 
@@ -23,6 +23,7 @@ func main() {
 	}
 	db := database.NewDB()
 	db.ConfigToml()
+	savage.DataConn(db)
 	log.Fatal(srv.ListenAndServe())
 }
 
@@ -33,9 +34,7 @@ func router(r *mux.Router) {
 	//r.HandleFunc("/auth", auth.AuthHandler).Methods("POST", "GET")
 	//r.HandleFunc("/auth/reg", auth.Register).Methods("POST")
 	//r.HandleFunc("/{core}/chars", handlers.SWgetAllChars)
-	//r.HandleFunc("/{core}/chars/ch{id}", handlers.GetChar)
+	r.HandleFunc("/sw/chars/ch{id}", savage.CharID)
 	//r.HandleFunc("/{core}/chars/ch{id}/del", nil)
-	//r.HandleFunc("/{core}/chars/add", handlers.AddCharshit)
-	r.HandleFunc("/{core}/chars/ch{id}", handlers.Midle)
-
+	r.HandleFunc("/{core}/chars/add", savage.AddCharshit)
 }
