@@ -23,7 +23,7 @@ func dataConn() (dbsourceName string) {
 	return
 }
 
-// GetAllChars - get all charshit from database
+// GetAllChars -get all charshit from database
 func GetAllChars(w http.ResponseWriter, r *http.Request) {
 	chars := []swChar{}
 	db, err := sql.Open("postgres", dataConn())

@@ -18,6 +18,7 @@ func NewDB() DB {
 	}
 }
 
+//
 func (config *DB) ConfigToml() error {
 	_, err := toml.DecodeFile("config.toml", &config)
 	if err != nil {

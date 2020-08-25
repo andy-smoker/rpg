@@ -5,7 +5,7 @@ var tempDB = []User{
 	User{ID: 1, Username: "Igor", Password: "111"},
 	User{ID: 2, Username: "Jija", Password: "555"},
 }
-
+//
 // User is user of programm
 type User struct {
 	ID                uint64 `json:"id"`

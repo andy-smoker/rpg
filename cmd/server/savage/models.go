@@ -74,6 +74,7 @@ type stRace struct {
 	RaceBonus raceBonus `json:"race_bonus"`
 }
 
+// func for makeDest interface
 func (*stRace) args() (r interface{}, arr []interface{}) {
 	race := stRace{}
 	arr = append(arr, &race.ID, &race.Name)

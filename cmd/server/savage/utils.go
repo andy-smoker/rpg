@@ -16,6 +16,7 @@ func makeArr(i interface{}) (arr []interface{}) {
 	return
 }
 
+// create dest for sql scan
 type newDest interface {
 	args() (interface{}, []interface{})
 	makeArr() []interface{}
