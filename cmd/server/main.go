@@ -36,6 +36,6 @@ func SWroutes(r *mux.Router) {
 	r.HandleFunc(prefix+"/traits/{id}", nil)
 	r.HandleFunc(prefix+"/flaws", nil)
 	r.HandleFunc(prefix+"/flaws/{id}", nil)
-	r.HandleFunc(prefix+"/items", nil)
+	r.HandleFunc(prefix+"/races", savage.GetAllRaces)
 	r.HandleFunc(prefix+"/items/{id}", nil)
 }
