@@ -1,8 +1,0 @@
-[db]
-user = "rest"
-pass = "rest"
-db = "rpg"
-
-[client]
-addr = "localhost"
-port = "8080"

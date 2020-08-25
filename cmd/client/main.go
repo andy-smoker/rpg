@@ -1,4 +1,4 @@
-package client
+package main
 
 import (
 	"log"
@@ -48,7 +48,7 @@ func (spa SPAHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // RunClient public finc for running client
-func RunClient() {
+func main() {
 	r := mux.NewRouter()
 	router(r)
 
