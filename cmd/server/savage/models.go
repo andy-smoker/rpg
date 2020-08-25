@@ -2,7 +2,7 @@ package savage
 
 // SWChar - struct charshit
 type SWChar struct {
-	ID       int    `json:"id"`
+	ID       int
 	UserName string `json:"username"`
 	Name     string `json:"name"`
 	Concept  string `json:"concept"`
@@ -25,14 +25,14 @@ type SWChar struct {
 // Ability -
 type Ability struct {
 	ID       int64
-	Name     string      `json:"name"`
-	Rank     string      `json:"rank"`
-	Cost     int         `json:"cost"`
-	Range    string      `json:"range"`
-	Damage   []string    `json:"damage"`
-	Duration string      `json:"duration"`
-	Aspect   interface{} `json:"aspect"`
-	About    string      `json:"about"`
+	Name     string   `json:"name"`
+	Rank     string   `json:"rank"`
+	Cost     int      `json:"cost"`
+	Range    string   `json:"range"`
+	Damage   []string `json:"damage"`
+	Duration string   `json:"duration"`
+	Aspect   string   `json:"aspect"`
+	About    string   `json:"about"`
 }
 
 // Trait .
@@ -57,12 +57,12 @@ type Flaw struct {
 // Item .
 type Item struct {
 	ID     int64
-	Name   string      `json:"name"`
-	Type   string      `json:"type"`
-	Price  int         `json:"price"`
-	Weight int         `json:"weight"`
-	Stats  interface{} `json:"stats"`
-	Note   string      `json:"note"`
+	Name   string `json:"name"`
+	Type   string `json:"type"`
+	Price  int    `json:"price"`
+	Weight int    `json:"weight"`
+	Stats  []Stat `json:"stats"`
+	Note   string `json:"note"`
 }
 
 // Race .
@@ -76,8 +76,8 @@ type Race struct {
 
 // Stat .
 type Stat struct {
-	Name  string
-	Value int
+	Name  string `json:"name"`
+	Value int    `json:"value"`
 }
 
 // Skill .

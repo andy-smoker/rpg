@@ -62,10 +62,10 @@ func CharID(w http.ResponseWriter, r *http.Request) {
 		w.Write(getCharShit(vars["id"]))
 		break
 	case "PUT":
-		updateCharShit(vars["id"])
+		w.Write(updateCharShit(vars["id"]))
 		break
 	case "DELETE":
-		deleteCharShit(vars["id"])
+		w.Write(deleteCharShit(vars["id"]))
 		break
 	}
 
@@ -99,12 +99,37 @@ func getCharShit(id string) []byte {
 	return data
 }
 
-func updateCharShit(id string) {
-	fmt.Println("Update char")
+func updateCharShit(id string) []byte {
+	resp := `{"ok":200}`
+	db, err := sql.Open("postgres", dataConn())
+	if err != nil {
+		log.Println(err)
+	}
+	defer db.Close()
+	_, err = db.Exec("update swcharshit set name=$1 where id = $1", id)
+	if err != nil {
+		log.Println(err)
+		resp = `{"401"}`
+	}
+	data, err := json.Marshal(resp)
+	return data
 }
 
-func deleteCharShit(id string) {
-	fmt.Println("Char delete is complete")
+func deleteCharShit(id string) []byte {
+	resp := `{"401"}`
+	db, err := sql.Open("postgres", dataConn())
+	if err != nil {
+		log.Println(err)
+	}
+	defer db.Close()
+	_, err = db.Exec("delete from swcharshit where id = $1", id)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	resp = `{"complete":true}`
+	data, err := json.Marshal(resp)
+	return data
 }
 
 // AddChar .
@@ -124,7 +149,7 @@ func AddChar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := db.Exec("insert into charshit(name,rank)values($1)", v.Name, v.Rank)
+	res, err := db.Exec("insert into swcharshit(name,rank)values($1)", v.Name, v.Rank)
 	if err != nil {
 		log.Println(err)
 		return
