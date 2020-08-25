@@ -26,9 +26,10 @@ func main() {
 
 // SWroutes .
 func SWroutes(r *mux.Router) {
-	prefix := "sw/"
-	r.HandleFunc(prefix+"chars/ch{id}", savage.CharID).Methods("GET", "PUT", "DELETE")
-	r.HandleFunc(prefix+"chars/add", savage.AddChar).Methods("POST")
+	prefix := "/sw"
+	r.HandleFunc(prefix+"/chars", nil)
+	r.HandleFunc(prefix+"/chars/ch{id}", savage.CharID).Methods("GET", "PUT", "DELETE")
+	r.HandleFunc(prefix+"/chars/add", savage.AddChar).Methods("POST")
 	r.HandleFunc(prefix+"/abilities", nil)
 	r.HandleFunc(prefix+"/abilities/{id}", nil)
 	r.HandleFunc(prefix+"/traits", nil)

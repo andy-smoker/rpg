@@ -7,11 +7,18 @@ import (
 
 type stGetter struct {
 	obj interface{}
-	arr []interface{} // it not work
+	arr []interface{}
+}
+
+func newGetter(str interface{}, array []interface{}) stGetter {
+	return stGetter{
+		obj: str,
+		arr: array,
+	}
 }
 
 func (g *stGetter) getAll(query string, scanValue ...interface{}) {
-
+	arr := g.arr
 	db, err := sql.Open("postgres", dataConn())
 	if err != nil {
 		log.Println(err)
@@ -30,6 +37,6 @@ func (g *stGetter) getAll(query string, scanValue ...interface{}) {
 			log.Println(err)
 			continue
 		}
-		g.arr = append(g.arr, i)
+		g.arr = append(arr, i)
 	}
 }
