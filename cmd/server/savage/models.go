@@ -1,11 +1,12 @@
 package savage
 
-// SWChar .
+// SWChar - struct charshit
 type SWChar struct {
-	ID      int    `json:"id"`
-	Name    string `json:"name"`
-	Concept string `json:"concept"`
-	Look    string `json:"look"`
+	ID       int    `json:"id"`
+	UserName string `json:"username"`
+	Name     string `json:"name"`
+	Concept  string `json:"concept"`
+	Look     string `json:"look"`
 
 	Exp        int       `json:"exp"`
 	Rank       string    `json:"rank"`
@@ -21,7 +22,7 @@ type SWChar struct {
 	About      string    `json:"about"`
 }
 
-// Ability .
+// Ability -
 type Ability struct {
 	ID       int64
 	Name     string      `json:"name"`
@@ -73,22 +74,14 @@ type Race struct {
 	Abilities []Ability
 }
 
-// Stats .
-
+// Stat .
 type Stat struct {
 	Name  string
 	Value int
 }
 
+// Skill .
 type Skill struct {
 	Name  string `json:"name"`
 	Value int    `json:"value"`
-}
-
-// NewSkill - create new skill
-func NewSkill(name string, value int) Skill {
-	return Skill{
-		Name:  name,
-		Value: value,
-	}
 }

@@ -1,8 +1,6 @@
 package database
 
 import (
-	"fmt"
-
 	"github.com/BurntSushi/toml"
 )
 
@@ -20,12 +18,11 @@ func NewDB() DB {
 	}
 }
 
-func (config *DB) ConfigToml() {
+func (config *DB) ConfigToml() error {
 	_, err := toml.DecodeFile("config.toml", &config)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
-	fmt.Println(config)
+	return nil
 
 }

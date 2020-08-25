@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"server/database"
 	savage "server/savage"
 
 	"time"
@@ -13,7 +12,7 @@ import (
 
 func main() {
 	r := mux.NewRouter()
-	router(r)
+	SWroutes(r)
 
 	srv := &http.Server{
 		Handler:      r,
@@ -21,20 +20,21 @@ func main() {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-	db := database.NewDB()
-	db.ConfigToml()
-	savage.DataConn(db)
+
 	log.Fatal(srv.ListenAndServe())
 }
 
-// Router .
-func router(r *mux.Router) {
-
-	//r.HandleFunc("/characters", handlers.GetAllCharshits).Methods("GET")
-	//r.HandleFunc("/auth", auth.AuthHandler).Methods("POST", "GET")
-	//r.HandleFunc("/auth/reg", auth.Register).Methods("POST")
-	//r.HandleFunc("/{core}/chars", handlers.SWgetAllChars)
-	r.HandleFunc("/sw/chars/ch{id}", savage.CharID)
-	//r.HandleFunc("/{core}/chars/ch{id}/del", nil)
-	r.HandleFunc("/{core}/chars/add", savage.AddCharshit)
+// SWroutes .
+func SWroutes(r *mux.Router) {
+	prefix := "sw/"
+	r.HandleFunc(prefix+"chars/ch{id}", savage.CharID).Methods("GET", "PUT", "DELETE")
+	r.HandleFunc(prefix+"chars/add", savage.AddChar).Methods("POST")
+	r.HandleFunc(prefix+"/abilities", nil)
+	r.HandleFunc(prefix+"/abilities/{id}", nil)
+	r.HandleFunc(prefix+"/traits", nil)
+	r.HandleFunc(prefix+"/traits/{id}", nil)
+	r.HandleFunc(prefix+"/flaws", nil)
+	r.HandleFunc(prefix+"/flaws/{id}", nil)
+	r.HandleFunc(prefix+"/items", nil)
+	r.HandleFunc(prefix+"/items/{id}", nil)
 }
