@@ -163,31 +163,12 @@ func AddChar(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Успешно добвален: ", lastID)
 }
 
-// GetAllReces - get all race name from database
+// GetAllRaces - get all race name from database
 func GetAllRaces(w http.ResponseWriter, r *http.Request) {
-	races := []stRace{}
+	race := stRace{ID: 0}
+	arr := getAll(&race, "select race_id,race_name from sw_racelist")
 
-	db, err := sql.Open("postgres", dataConn())
-	if err != nil {
-		log.Println(err)
-	}
-	defer db.Close()
-
-	rows, err := db.Query("select race_id,race_name from sw_racelist")
-	if err != nil {
-		log.Println(err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		r := stRace{}
-		err := rows.Scan(&r.ID, &r.Name)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		races = append(races, r)
-	}
-	data, err := json.Marshal(races)
+	data, err := json.Marshal(arr)
 	if err != nil {
 		log.Println(err)
 	}

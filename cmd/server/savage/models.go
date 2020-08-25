@@ -46,6 +46,10 @@ type trait struct {
 	About     string      `json:"about"`
 }
 
+type stTMP struct {
+	V []interface{} `json:"b"`
+}
+
 type flaw struct {
 	ID        int64
 	Name      string      `json:"name"`
@@ -68,6 +72,19 @@ type stRace struct {
 	ID        int64     `json:"race_id"`
 	Name      string    `json:"race_name"`
 	RaceBonus raceBonus `json:"race_bonus"`
+}
+
+func (*stRace) args() (r interface{}, arr []interface{}) {
+	race := stRace{}
+	arr = append(arr, &race.ID, &race.Name)
+	r = &race
+	return
+}
+
+func (*stRace) makeArr() (arr []interface{}) {
+	r := stRace{}
+	arr = append(arr, r)
+	return
 }
 
 func (r *stRace) ArrayOfStruct() []stRace {
