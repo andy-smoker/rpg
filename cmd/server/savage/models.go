@@ -1,29 +1,31 @@
 package savage
 
 // SWChar - struct charshit
-type SWChar struct {
+type swChar struct {
 	ID       int
 	UserName string `json:"username"`
-	Name     string `json:"name"`
-	Concept  string `json:"concept"`
-	Look     string `json:"look"`
+	CharName string `json:"name"`
 
-	Exp        int       `json:"exp"`
-	Rank       string    `json:"rank"`
-	Points     int       `json:"points"`
-	Race       string    `json:"race"`
-	Stats      []Stat    `json:"stats"`
-	Skills     []Skill   `json:"skills"`
-	Traits     []Trait   `json:"trait"`
-	Flaws      []Flaw    `json:"flaws"`
-	Abilities  []Ability `json:"abilities"`
+	Concept string `json:"concept"`
+	Race    string `json:"race"`
+
+	Exp    int    `json:"exp"`
+	Rank   string `json:"rank"`
+	Points int    `json:"points"`
+
+	Stats      []stat    `json:"stats"`
+	Skills     []skill   `json:"skills"`
+	Traits     []trait   `json:"trait"`
+	Flaws      []flaw    `json:"flaws"`
+	Abilities  []ability `json:"abilities"`
 	PowerPoint int       `json:"power_points"`
-	Inventory  []Item    `json:"inventory"`
+	Inventory  []item    `json:"inventory"`
+	Look       string    `json:"look"`
 	About      string    `json:"about"`
 }
 
 // Ability -
-type Ability struct {
+type ability struct {
 	ID       int64
 	Name     string   `json:"name"`
 	Rank     string   `json:"rank"`
@@ -35,8 +37,7 @@ type Ability struct {
 	About    string   `json:"about"`
 }
 
-// Trait .
-type Trait struct {
+type trait struct {
 	ID        int64
 	Name      string      `json:"name"`
 	Rank      string      `json:"rank"`
@@ -45,8 +46,7 @@ type Trait struct {
 	About     string      `json:"about"`
 }
 
-// Flaw .
-type Flaw struct {
+type flaw struct {
 	ID        int64
 	Name      string      `json:"name"`
 	Influence string      `json:"influence"`
@@ -54,34 +54,38 @@ type Flaw struct {
 	About     string      `json:"about"`
 }
 
-// Item .
-type Item struct {
+type item struct {
 	ID     int64
 	Name   string `json:"name"`
 	Type   string `json:"type"`
 	Price  int    `json:"price"`
 	Weight int    `json:"weight"`
-	Stats  []Stat `json:"stats"`
+	Stats  []stat `json:"stats"`
 	Note   string `json:"note"`
 }
 
-// Race .
-type Race struct {
-	ID        int64
-	Name      string
-	Stats     []Stat
-	Skills    []Skill
-	Abilities []Ability
+type stRace struct {
+	ID        int64     `json:"race_id"`
+	Name      string    `json:"race_name"`
+	RaceBonus raceBonus `json:"race_bonus"`
 }
 
-// Stat .
-type Stat struct {
+func (r *stRace) ArrayOfStruct() []stRace {
+	return []stRace{}
+}
+
+type raceBonus struct {
+	Stats     []stat    `json:"stats"`
+	Skills    []skill   `json:"skills"`
+	Abilities []ability `json:"abiliteis"`
+}
+
+type stat struct {
 	Name  string `json:"name"`
 	Value int    `json:"value"`
 }
 
-// Skill .
-type Skill struct {
+type skill struct {
 	Name  string `json:"name"`
 	Value int    `json:"value"`
 }

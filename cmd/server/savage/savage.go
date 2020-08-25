@@ -25,26 +25,26 @@ func dataConn() (dbsourceName string) {
 
 // GetAllChars - get all charshit from database
 func GetAllChars(w http.ResponseWriter, r *http.Request) {
-	chars := []SWChar{}
+	chars := []swChar{}
 	db, err := sql.Open("postgres", dataConn())
 	if err != nil {
 		log.Println(err)
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select name,rank from chars")
+	rows, err := db.Query("select charname,username, concepid, raceid, epx, rank, points from chars")
 	if err != nil {
 		log.Println(err)
 	}
 	defer rows.Close()
 	for rows.Next() {
-		char := SWChar{}
-		err := rows.Scan(&char.Name, &char.Rank)
+		sw := swChar{}
+		err := rows.Scan(&sw.CharName, &sw.UserName, &sw.Concept, &sw.Race, &sw.Exp, &sw.Rank, &sw.Points)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-		chars = append(chars, char)
+		chars = append(chars, sw)
 	}
 	data, err := json.Marshal(chars)
 	if err != nil {
@@ -73,26 +73,26 @@ func CharID(w http.ResponseWriter, r *http.Request) {
 
 // SWgetChar method for marshal and get data
 func getCharShit(id string) []byte {
-	char := SWChar{}
+	sw := swChar{}
 	db, err := sql.Open("postgres", dataConn())
 	if err != nil {
 		log.Println(err)
 	}
 	defer db.Close()
-	rows, err := db.Query("select name,rank from chars where id = $1", id)
+	rows, err := db.Query("select charname,username, concepid, raceid, epx, rank, points from chars where id = $1", id)
 	if err != nil {
 		log.Println(err)
 	}
 
 	defer rows.Close()
 	for rows.Next() {
-		err := rows.Scan(&char.Name, &char.Rank)
+		err := rows.Scan(sw.CharName, sw.UserName, sw.Concept, sw.Race, sw.Exp, sw.Rank, sw.Points)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 	}
-	data, err := json.Marshal(char)
+	data, err := json.Marshal(sw)
 	if err != nil {
 		log.Println(err)
 	}
@@ -142,14 +142,15 @@ func AddChar(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	v := SWChar{}
-	err = json.NewDecoder(r.Body).Decode(&v)
+	sw := swChar{}
+	err = json.NewDecoder(r.Body).Decode(&sw)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	res, err := db.Exec("insert into swcharshit(name,rank)values($1)", v.Name, v.Rank)
+	res, err := db.Exec(`insert into swcharshit(charname,username, concepid, raceid, epx, rank, points)
+	values($1,2$,3$,4$,5$,6$)`, sw.CharName, sw.UserName, sw.Concept, sw.Race, sw.Exp, sw.Rank, sw.Points)
 	if err != nil {
 		log.Println(err)
 		return
@@ -160,6 +161,42 @@ func AddChar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprintln(w, "Успешно добвален: ", lastID)
+}
+
+// GetAllReces - get all race name from database
+func GetAllRaces(w http.ResponseWriter, r *http.Request) {
+	races := []stRace{}
+
+	db, err := sql.Open("postgres", dataConn())
+	if err != nil {
+		log.Println(err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query("select race_id,race_name from sw_racelist")
+	if err != nil {
+		log.Println(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		r := stRace{}
+		err := rows.Scan(&r.ID, &r.Name)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		races = append(races, r)
+	}
+	data, err := json.Marshal(races)
+	if err != nil {
+		log.Println(err)
+	}
+	w.Write(data)
+}
+
+// GetAbility - get ability from database
+func GetRace(w http.ResponseWriter, r *http.Request) {
+
 }
 
 // GetAllAbilities - get all abilities from database
