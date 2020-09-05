@@ -24,8 +24,6 @@ type swChar struct {
 	About      string    `json:"about"`
 }
 
-<<<<<<< HEAD
-=======
 func (*swChar) Args() (r interface{}, arr []interface{}) {
 	st := swChar{}
 	arr = append(arr, &st.ID, &st.CharName, &st.Rank)
@@ -33,7 +31,6 @@ func (*swChar) Args() (r interface{}, arr []interface{}) {
 	return
 }
 
->>>>>>> 67aa5527866ea73618c020c7a1b05606363d4ca3
 // Ability -
 type ability struct {
 	ID       int64
@@ -84,27 +81,14 @@ type stRace struct {
 	RaceBonus raceBonus `json:"race_bonus"`
 }
 
-<<<<<<< HEAD
-func (*stRace) args() (r interface{}, arr []interface{}) {
-=======
 // func for makeDest interface
 func (*stRace) Args() (r interface{}, arr []interface{}) {
->>>>>>> 67aa5527866ea73618c020c7a1b05606363d4ca3
 	race := stRace{}
 	arr = append(arr, &race.ID, &race.Name)
 	r = &race
 	return
 }
 
-<<<<<<< HEAD
-func (*stRace) makeArr() (arr []interface{}) {
-	r := stRace{}
-	arr = append(arr, r)
-	return
-}
-
-=======
->>>>>>> 67aa5527866ea73618c020c7a1b05606363d4ca3
 func (r *stRace) ArrayOfStruct() []stRace {
 	return []stRace{}
 }
