@@ -1,7 +1,6 @@
 package savage
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,44 +8,15 @@ import (
 	"server/database"
 
 	"github.com/gorilla/mux"
-	//
-	_ "github.com/lib/pq"
 )
-
-func dataConn() (dbsourceName string) {
-	d := database.NewDB()
-	err := d.ConfigToml()
-	if err != nil {
-		log.Println(err)
-	}
-	dbsourceName = fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", d.User, d.Pass, d.DB)
-	return
-}
 
 // GetAllChars -get all charshit from database
 func GetAllChars(w http.ResponseWriter, r *http.Request) {
-	chars := []swChar{}
-	db, err := sql.Open("postgres", dataConn())
-	if err != nil {
-		log.Println(err)
-	}
-	defer db.Close()
+	char := swChar{}
 
-	rows, err := db.Query("select charname,username, concepid, raceid, epx, rank, points from chars")
-	if err != nil {
-		log.Println(err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		sw := swChar{}
-		err := rows.Scan(&sw.CharName, &sw.UserName, &sw.Concept, &sw.Race, &sw.Exp, &sw.Rank, &sw.Points)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		chars = append(chars, sw)
-	}
-	data, err := json.Marshal(chars)
+	rows := database.GetAll(&char, "select * from chars")
+
+	data, err := json.Marshal(rows)
 	if err != nil {
 		log.Println(err)
 	}
@@ -74,25 +44,9 @@ func CharID(w http.ResponseWriter, r *http.Request) {
 // SWgetChar method for marshal and get data
 func getCharShit(id string) []byte {
 	sw := swChar{}
-	db, err := sql.Open("postgres", dataConn())
-	if err != nil {
-		log.Println(err)
-	}
-	defer db.Close()
-	rows, err := db.Query("select charname,username, concepid, raceid, epx, rank, points from chars where id = $1", id)
-	if err != nil {
-		log.Println(err)
-	}
+	row := database.GetOnce(&sw, "select id, name, rank from chars where id = $1", id)
 
-	defer rows.Close()
-	for rows.Next() {
-		err := rows.Scan(sw.CharName, sw.UserName, sw.Concept, sw.Race, sw.Exp, sw.Rank, sw.Points)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-	}
-	data, err := json.Marshal(sw)
+	data, err := json.Marshal(row)
 	if err != nil {
 		log.Println(err)
 	}
@@ -100,32 +54,26 @@ func getCharShit(id string) []byte {
 }
 
 func updateCharShit(id string) []byte {
-	resp := `{"ok":200}`
-	db, err := sql.Open("postgres", dataConn())
+	sw := swChar{}
+	resp := `{"401"}`
+	_, err := database.ExecOnce(&sw, "update swcharshit set name=$1 where id = $1", id)
 	if err != nil {
 		log.Println(err)
 	}
-	defer db.Close()
-	_, err = db.Exec("update swcharshit set name=$1 where id = $1", id)
-	if err != nil {
-		log.Println(err)
-		resp = `{"401"}`
-	}
+
 	data, err := json.Marshal(resp)
+	if err != nil {
+		log.Println(err)
+	}
 	return data
 }
 
 func deleteCharShit(id string) []byte {
+	sw := swChar{}
 	resp := `{"401"}`
-	db, err := sql.Open("postgres", dataConn())
+	_, err := database.ExecOnce(&sw, "delete from swcharshit where id = $1", id)
 	if err != nil {
 		log.Println(err)
-	}
-	defer db.Close()
-	_, err = db.Exec("delete from swcharshit where id = $1", id)
-	if err != nil {
-		log.Println(err)
-		return nil
 	}
 	resp = `{"complete":true}`
 	data, err := json.Marshal(resp)
@@ -135,26 +83,10 @@ func deleteCharShit(id string) []byte {
 // AddChar .
 func AddChar(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "json")
-	db, err := sql.Open("sqlite3", "database.db")
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	defer db.Close()
-
 	sw := swChar{}
-	err = json.NewDecoder(r.Body).Decode(&sw)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	res, err := db.Exec(`insert into swcharshit(charname,username, concepid, raceid, epx, rank, points)
+	res, err := database.ExecOnce(&sw, `insert into swcharshit(charname,username, concepid, raceid, epx, rank, points)
 	values($1,2$,3$,4$,5$,6$)`, sw.CharName, sw.UserName, sw.Concept, sw.Race, sw.Exp, sw.Rank, sw.Points)
-	if err != nil {
-		log.Println(err)
-		return
-	}
+
 	lastID, err := res.LastInsertId()
 	if err != nil {
 		log.Println(err)
@@ -166,7 +98,7 @@ func AddChar(w http.ResponseWriter, r *http.Request) {
 // GetAllRaces - get all race name from database
 func GetAllRaces(w http.ResponseWriter, r *http.Request) {
 	race := stRace{ID: 0}
-	arr := getAll(&race, "select race_id,race_name from sw_racelist")
+	arr := database.GetAll(&race, "select race_id,race_name from sw_racelist")
 
 	data, err := json.Marshal(arr)
 	if err != nil {
@@ -175,6 +107,7 @@ func GetAllRaces(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+/*
 // GetAbility - get ability from database
 func GetRace(w http.ResponseWriter, r *http.Request) {
 
@@ -213,3 +146,4 @@ func GetAllItems(w http.ResponseWriter, r *http.Request) {
 func GetItem(w http.ResponseWriter, r *http.Request) {
 
 }
+*/
