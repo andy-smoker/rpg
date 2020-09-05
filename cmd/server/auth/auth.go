@@ -5,7 +5,11 @@ var tempDB = []User{
 	User{ID: 1, Username: "Igor", Password: "111"},
 	User{ID: 2, Username: "Jija", Password: "555"},
 }
+<<<<<<< HEAD:cmd/server/auth/auth.go
 
+=======
+//
+>>>>>>> 67aa5527866ea73618c020c7a1b05606363d4ca3:server/auth/auth.go
 // User is user of programm
 type User struct {
 	ID                uint64 `json:"id"`

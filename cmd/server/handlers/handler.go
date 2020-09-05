@@ -1,5 +1,6 @@
 package handlers
 
+<<<<<<< HEAD
 import (
 	"fmt"
 	"net/http"
@@ -20,3 +21,6 @@ func Midle(w http.ResponseWriter, r *http.Request) {
 		break
 	}
 }
+=======
+//
+>>>>>>> 67aa5527866ea73618c020c7a1b05606363d4ca3
