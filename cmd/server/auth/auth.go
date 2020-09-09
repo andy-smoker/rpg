@@ -55,21 +55,25 @@ func NewSession(addr string) Sessions {
 
 // AuthHandler .
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	u := user{}
 	defer r.Body.Close()
 
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		if err == io.EOF {
-			fmt.Fprint(w, "пустой запрос")
+			w.Header().Set("Status-code", fmt.Sprint(http.StatusBadRequest))
+			w.Write([]byte("null"))
 		}
 		return
 	}
 
-	token, err := u.authMethod()
+	token, status := u.authMethod()
 	//u.refreshToken(token)
-	if err != nil {
-		log.Print(err)
+	if status != 200 {
+		log.Print("bad request")
+		w.Header().Set("Status-code", fmt.Sprint(http.StatusBadRequest))
 		return
 	}
 
@@ -78,7 +82,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (u *user) authMethod() (string, error) {
+func (u *user) authMethod() (string, int) {
 
 	user := user{}
 	dbreq := database.GetOnce(&user, "select login, password from users where login = $1 and password = $2", u.Login, u.Password)
@@ -86,10 +90,14 @@ func (u *user) authMethod() (string, error) {
 	fmt.Println(dbreq)
 	if dbreq != nil {
 		log.Println("login")
-		return creatToken(u.ID)
+		token, err := creatToken(u.ID)
+		if err != nil {
+			return "", http.StatusBadRequest
+		}
+		return token, http.StatusOK
 	}
 
-	return "", fmt.Errorf("login or password is fail")
+	return "", http.StatusBadRequest
 
 }
 

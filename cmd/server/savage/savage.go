@@ -27,58 +27,69 @@ func GetAllChars(w http.ResponseWriter, r *http.Request) {
 
 // CharID - funcs chatshit by id from database
 func CharID(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "json")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	vars := mux.Vars(r)
+
+	var (
+		status int
+		i      interface{}
+	)
+
 	switch r.Method {
 	case "GET":
-		w.Write(getCharShit(vars["id"]))
+		status, i = getCharShit(vars["id"])
 		break
 	case "PUT":
-		w.Write(updateCharShit(vars["id"]))
+		status, i = updateCharShit(vars["id"])
 		break
 	case "DELETE":
-		w.Write(deleteCharShit(vars["id"]))
+		status, i = deleteCharShit(vars["id"])
 		break
 	}
-
-}
-
-func getCharShit(id string) []byte {
-	sw := swChar{}
-	row := database.GetOnce(&sw, "select id, name, rank from chars where id = $1", id)
-
-	data, err := json.Marshal(row)
+	resp, err := json.Marshal(i)
 	if err != nil {
 		log.Println(err)
 	}
-	return data
+
+	w.Header().Add("Status-code", fmt.Sprint(status))
+	w.Write(resp)
 }
 
-func updateCharShit(id string) []byte {
+func getCharShit(id string) (status int, row interface{}) {
 	sw := swChar{}
-	resp := `{"401"}`
+	row = database.GetOnce(&sw, "select id, name, rank from chars where id = $1", id)
+
+	if sw.ID == 0 {
+		status = http.StatusNotFound
+		row = nil
+		return
+
+	}
+	status = http.StatusOK
+	return
+}
+
+func updateCharShit(id string) (status int, row interface{}) {
+	sw := swChar{}
 	_, err := database.ExecOnce(&sw, "update swcharshit set name=$1 where id = $1", id)
 	if err != nil {
 		log.Println(err)
+		status = http.StatusBadRequest
 	}
-
-	data, err := json.Marshal(resp)
-	if err != nil {
-		log.Println(err)
-	}
-	return data
+	status = http.StatusOK
+	return
 }
 
-func deleteCharShit(id string) []byte {
+func deleteCharShit(id string) (status int, row interface{}) {
 	sw := swChar{}
-	resp := `{"401"}`
 	_, err := database.ExecOnce(&sw, "delete from swcharshit where id = $1", id)
 	if err != nil {
 		log.Println(err)
+		status = http.StatusBadRequest
 	}
-	resp = `{"complete":true}`
-	data, err := json.Marshal(resp)
-	return data
+	status = http.StatusOK
+	return
 }
 
 // AddChar .
