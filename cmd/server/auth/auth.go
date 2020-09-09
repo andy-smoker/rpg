@@ -26,13 +26,13 @@ type user struct {
 	Login             string `json:"login"`
 	Username          string `json:"username"`
 	Email             string `json:"email"`
-	Password          string
+	Password          string `json:"password"`
 	EncriptedPassword string `json:"encpass"`
 }
 
 func (*user) Args() (r interface{}, arr []interface{}) {
 	u := user{}
-	arr = append(arr, &u.ID, &u.Login, &u.Password)
+	arr = append(arr, &u.Login, &u.Password)
 	r = &u
 	return
 }
@@ -57,9 +57,7 @@ func NewSession(addr string) Sessions {
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	u := user{}
 	defer r.Body.Close()
-	if r.Body == nil {
-		return
-	}
+
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		if err == io.EOF {
@@ -83,11 +81,12 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 func (u *user) authMethod() (string, error) {
 
 	user := user{}
-	database.GetOnce(&user, "select id,login,password from users where login = $1", user.Login)
+	dbreq := database.GetOnce(&user, "select login, password from users where login = $1 and password = $2", u.Login, u.Password)
 
-	if user.Login == u.Login && user.Password == u.Password {
+	fmt.Println(dbreq)
+	if dbreq != nil {
 		log.Println("login")
-		return creatToken(user.ID)
+		return creatToken(u.ID)
 	}
 
 	return "", fmt.Errorf("login or password is fail")

@@ -76,6 +76,7 @@ func GetOnce(d newDest, query string, args ...interface{}) interface{} {
 			log.Println(err)
 			continue
 		}
+		fmt.Println(obj)
 		return obj
 	}
 	return nil

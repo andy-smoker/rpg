@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"server/auth"
 	"server/savage"
 
 	"time"
@@ -14,7 +15,7 @@ func main() {
 	r := mux.NewRouter()
 	SWroutes(r)
 
-	r.HandleFunc("/auth", nil)
+	r.HandleFunc("/auth", auth.AuthHandler)
 
 	srv := &http.Server{
 		Handler:      r,
