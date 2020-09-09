@@ -9,14 +9,14 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func dataConn() (dbsourceName string) {
+func dataPosgresConn() (driver string, datasourceName string) {
 	d := NewDB()
 	err := d.ConfigToml()
 	if err != nil {
 		log.Println(err)
 	}
-	dbsourceName = fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", d.User, d.Pass, d.DB)
-	fmt.Println(dbsourceName)
+	driver = "postgres"
+	datasourceName = fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", d.User, d.Pass, d.DB)
 	return
 }
 
@@ -28,7 +28,7 @@ type newDest interface {
 // GetAll return all rows from posgres table
 func GetAll(d newDest, query string, args ...interface{}) []interface{} {
 	var arr []interface{}
-	db, err := sql.Open("postgres", dataConn())
+	db, err := sql.Open(dataPosgresConn())
 	if err != nil {
 		log.Println(err)
 	}
@@ -55,18 +55,20 @@ func GetAll(d newDest, query string, args ...interface{}) []interface{} {
 // GetOnce return one row from posgres table
 func GetOnce(d newDest, query string, args ...interface{}) interface{} {
 	obj, dest := d.Args()
-
-	db, err := sql.Open("postgres", dataConn())
+	db, err := sql.Open(dataPosgresConn())
 	if err != nil {
 		log.Println(err)
+		return nil
 	}
 	defer db.Close()
 
 	rows, err := db.Query(query, args...)
 	if err != nil {
 		log.Println(err)
+		return nil
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		err := rows.Scan(dest...)
 
@@ -74,14 +76,14 @@ func GetOnce(d newDest, query string, args ...interface{}) interface{} {
 			log.Println(err)
 			continue
 		}
+		return obj
 	}
-
-	return obj
+	return nil
 }
 
 // ExecOnce fanc for add/delet/upgrade row form posgres table
 func ExecOnce(obj interface{}, query string, args ...interface{}) (sql.Result, error) {
-	db, err := sql.Open("postgres", dataConn())
+	db, err := sql.Open(dataPosgresConn())
 	if err != nil {
 		log.Println(err)
 	}

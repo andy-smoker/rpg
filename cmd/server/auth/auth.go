@@ -1,17 +1,27 @@
 package auth
 
-/*
-var tempDB = []User{
-	User{ID: 1, Username: "Igor", Password: "111"},
-	User{ID: 2, Username: "Jija", Password: "555"},
-}
-<<<<<<< HEAD:cmd/server/auth/auth.go
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"math/rand"
+	"net/http"
+	"os"
+	"server/database"
+	"time"
 
-=======
+	"github.com/dgrijalva/jwt-go"
+)
+
+var tempDB = []user{
+	user{ID: 1, Username: "Igor", Password: "111"},
+	user{ID: 2, Username: "Jija", Password: "555"},
+}
+
 //
->>>>>>> 67aa5527866ea73618c020c7a1b05606363d4ca3:server/auth/auth.go
 // User is user of programm
-type User struct {
+type user struct {
 	ID                uint64 `json:"id"`
 	Login             string `json:"login"`
 	Username          string `json:"username"`
@@ -20,17 +30,24 @@ type User struct {
 	EncriptedPassword string `json:"encpass"`
 }
 
-// Session .
-type Session struct {
+func (*user) Args() (r interface{}, arr []interface{}) {
+	u := user{}
+	arr = append(arr, &u.ID, &u.Login, &u.Password)
+	r = &u
+	return
+}
+
+// Sessions .
+type Sessions struct {
 	Address string
 	Key     int
 }
 
-func NewSession(addr string) Session {
+func NewSession(addr string) Sessions {
 	rand.Seed(time.Now().UnixNano())
 	key := rand.Intn(100)
 
-	return Session{
+	return Sessions{
 		Address: addr,
 		Key:     key,
 	}
@@ -38,7 +55,7 @@ func NewSession(addr string) Session {
 
 // AuthHandler .
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
-	u := User{}
+	u := user{}
 	defer r.Body.Close()
 	if r.Body == nil {
 		return
@@ -52,7 +69,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token, err := u.authMethod()
-	u.refreshToken(token)
+	//u.refreshToken(token)
 	if err != nil {
 		log.Print(err)
 		return
@@ -63,32 +80,11 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (u *user) authMethod() (string, error) {
 
-func (u *User) authMethod() (string, error) {
+	user := user{}
+	database.GetOnce(&user, "select id,login,password from users where login = $1", user.Login)
 
-	user := User{}
-
-	db, err := sql.Open(config.DBConnect())
-	if err != nil {
-		return "", err
-	}
-	defer db.Close()
-
-	row, err := db.Query("select id,login,password from users where login = $1", u.Login)
-	if err != nil {
-		log.Println(err)
-		return "", err
-	}
-	defer row.Close()
-	row.Next()
-	err = row.Scan(&user.ID, &user.Login, &user.Password)
-	if err != nil {
-		log.Println(err)
-		return "", err
-	}
-
-	fmt.Println(user)
-	fmt.Println(u)
 	if user.Login == u.Login && user.Password == u.Password {
 		log.Println("login")
 		return creatToken(user.ID)
@@ -114,8 +110,9 @@ func creatToken(userid uint64) (string, error) {
 	return token, nil
 }
 
-func (u *User) refreshToken(token string) {
-	db, err := sql.Open(config.DBConnect())
+/*
+func (u *user) refreshToken(token string) {
+	db, err := sql.Open(database.DBConnect())
 	if err != nil {
 		return
 	}
@@ -129,10 +126,10 @@ func (u *User) refreshToken(token string) {
 	}
 
 }
-
+*/
 // Register new user
 func Register(w http.ResponseWriter, r *http.Request) {
-	u := User{}
+	u := user{}
 	defer r.Body.Close()
 	if r.Body == nil {
 		return
@@ -140,23 +137,17 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		if err == io.EOF {
-			fmt.Fprint(w, "пустой запрос")
+			w.WriteHeader(http.StatusBadRequest)
 		}
 		return
 	}
-
-	db, err := sql.Open(config.DBConnect())
-	if err != nil {
-		log.Println(err)
-	}
-	defer db.Close()
-	_, err = db.Exec(`insert into users (login, password, username)
+	_, err = database.ExecOnce(`insert into users (login, password, username)
 	values($1, $2, $3);`, u.Login, u.Password, u.Username)
 	if err != nil {
 		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 }
-*/

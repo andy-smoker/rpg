@@ -1,3 +1,3 @@
 .PHONY: build
 build:
-	go build -v src/main.go
+	cd cmd/server go build -v 

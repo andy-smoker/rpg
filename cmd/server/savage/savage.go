@@ -12,9 +12,11 @@ import (
 
 // GetAllChars -get all charshit from database
 func GetAllChars(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	char := swChar{}
 
-	rows := database.GetAll(&char, "select * from chars")
+	rows := database.GetAll(&char, "select id, name, rank from chars")
 
 	data, err := json.Marshal(rows)
 	if err != nil {
@@ -41,7 +43,6 @@ func CharID(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// SWgetChar method for marshal and get data
 func getCharShit(id string) []byte {
 	sw := swChar{}
 	row := database.GetOnce(&sw, "select id, name, rank from chars where id = $1", id)
@@ -84,9 +85,17 @@ func deleteCharShit(id string) []byte {
 func AddChar(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "json")
 	sw := swChar{}
+	err := json.NewDecoder(r.Body).Decode(&sw)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	res, err := database.ExecOnce(&sw, `insert into swcharshit(charname,username, concepid, raceid, epx, rank, points)
 	values($1,2$,3$,4$,5$,6$)`, sw.CharName, sw.UserName, sw.Concept, sw.Race, sw.Exp, sw.Rank, sw.Points)
-
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	lastID, err := res.LastInsertId()
 	if err != nil {
 		log.Println(err)
@@ -97,7 +106,7 @@ func AddChar(w http.ResponseWriter, r *http.Request) {
 
 // GetAllRaces - get all race name from database
 func GetAllRaces(w http.ResponseWriter, r *http.Request) {
-	race := stRace{ID: 0}
+	race := stRace{}
 	arr := database.GetAll(&race, "select race_id,race_name from sw_racelist")
 
 	data, err := json.Marshal(arr)
