@@ -41,7 +41,7 @@ export function MyComponent() {
                         <td>
                         {component.rank}
                         </td>
-                        <a href={"profile/ch"+component.ID} > adout</a>
+                        <a href={"profile/#ch?ch="+component.ID} > adout</a>
                     </tr>
                 ))}
             </table>

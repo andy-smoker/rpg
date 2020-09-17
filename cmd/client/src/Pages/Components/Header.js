@@ -12,6 +12,14 @@ export class Header extends React.Component{
             <button type="button">
                 <a href="/create"> Создать </a>
             </button>
+            <button onClick={logOut}>
+                <a href="/">Выход</a>
+                
+            </button>
         </header>
     )}
+}
+
+function logOut(){
+    localStorage.removeItem("token")
 }

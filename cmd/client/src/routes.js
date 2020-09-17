@@ -17,6 +17,9 @@ export const useRoutes = isAuth => {
                 <Route path="/create" exact>
                     <CreateChar />
                 </Route>
+                <Route path="/profile/ch:id">
+                    <CreateChar />
+                </Route>
                 <Redirect to="/profile" />
             </Switch>
         )

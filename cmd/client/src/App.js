@@ -3,7 +3,12 @@ import { useRoutes } from "./routes";
 import {BrowserRouter as Router} from 'react-router-dom'
 
 function App() {
-  const routes = useRoutes(1)
+  let isAuth = false
+  
+  if (localStorage["token"] != null){
+    isAuth = true
+  }
+  const routes = useRoutes(isAuth)
   return (
     <div>
     <Router>
