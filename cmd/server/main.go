@@ -27,7 +27,7 @@ func main() {
 }
 
 func mainRoute(r *mux.Router) {
-	r.HandleFunc("/auth", auth.AuthHandler).Methods("POST")
+	r.HandleFunc("/auth", auth.Auth).Methods("POST")
 	r.HandleFunc("/reg", auth.Register).Methods("POST")
 }
 

@@ -45,14 +45,13 @@ func (*user) Args() (r interface{}, arr []interface{}) {
 	return
 }
 
-// AuthHandler .
-func AuthHandler(w http.ResponseWriter, r *http.Request) {
+// Auth .
+func Auth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	u := user{}
 	defer r.Body.Close()
-
 	if r.Body == nil {
 		return
 	}
@@ -67,7 +66,6 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token, err := u.authMethod()
-	//u.refreshToken(token)
 	if err != nil {
 		log.Print(err)
 		w.Header().Set("Status-code", fmt.Sprint(http.StatusBadRequest))
@@ -75,17 +73,8 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := Session{
-		User:  user{Login: u.Login},
-		Token: token,
-	}
-
-	data, err := json.Marshal(resp)
-	if err != nil {
-		w.WriteHeader(http.StatusConflict)
-	}
+	w.Header().Set("Token", token)
 	w.WriteHeader(http.StatusFound)
-	w.Write(data)
 
 }
 
@@ -111,9 +100,9 @@ func creatToken(u *user) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"auth":    true,
 		"user_id": u.ID,
-		"exp":     time.Now().Unix(),
+		"time":    time.Now().Unix(),
 	})
-	key := sha256.Sum256([]byte(u.Login))
+	key := sha256.Sum256([]byte(u.Login)) // make sha256 key-secret
 	tokenString, err := token.SignedString(key[:])
 	if err != nil {
 		return "", err
@@ -122,6 +111,7 @@ func creatToken(u *user) (string, error) {
 	return tokenString, nil
 }
 
+// ValidToken func for chek valid token
 func ValidToken(tokenString string) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -130,7 +120,7 @@ func ValidToken(tokenString string) {
 		return "huica", nil
 	})
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		fmt.Println(claims["user_id"])
+		fmt.Println(claims["user_id"], claims["time"])
 	} else {
 		fmt.Println(err)
 	}
