@@ -1,2 +1,5 @@
 *.toml
 *.json
+runserver
+
+node_modules

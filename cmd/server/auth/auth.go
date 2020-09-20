@@ -1,13 +1,13 @@
 package auth
 
 import (
+	"crypto/sha256"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"math/rand"
 	"net/http"
-	"os"
 	"server/database"
 	"time"
 
@@ -30,6 +30,14 @@ type user struct {
 	EncriptedPassword string `json:"encpass"`
 }
 
+// Session .
+type Session struct {
+	User    user   `json:"user"`
+	Token   string `json:"token"`
+	Key     int
+	Timeout time.Time
+}
+
 func (*user) Args() (r interface{}, arr []interface{}) {
 	u := user{}
 	arr = append(arr, &u.Login, &u.Password)
@@ -37,84 +45,95 @@ func (*user) Args() (r interface{}, arr []interface{}) {
 	return
 }
 
-// Sessions .
-type Sessions struct {
-	Address string
-	Key     int
-}
-
-func NewSession(addr string) Sessions {
-	rand.Seed(time.Now().UnixNano())
-	key := rand.Intn(100)
-
-	return Sessions{
-		Address: addr,
-		Key:     key,
-	}
-}
-
 // AuthHandler .
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	u := user{}
 	defer r.Body.Close()
+
+	if r.Body == nil {
+		return
+	}
 
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		if err == io.EOF {
-			w.Header().Set("Status-code", fmt.Sprint(http.StatusBadRequest))
+			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("null"))
 		}
 		return
 	}
 
-	token, status := u.authMethod()
+	token, err := u.authMethod()
 	//u.refreshToken(token)
-	if status != 200 {
-		log.Print("bad request")
+	if err != nil {
+		log.Print(err)
 		w.Header().Set("Status-code", fmt.Sprint(http.StatusBadRequest))
+		w.Write([]byte("login or pass not exist"))
 		return
 	}
 
-	w.Header().Add("Token", token)
-	w.WriteHeader(http.StatusOK)
+	resp := Session{
+		User:  user{Login: u.Login},
+		Token: token,
+	}
+
+	data, err := json.Marshal(resp)
+	if err != nil {
+		w.WriteHeader(http.StatusConflict)
+	}
+	w.WriteHeader(http.StatusFound)
+	w.Write(data)
 
 }
 
-func (u *user) authMethod() (string, int) {
-
-	user := user{}
-	dbreq := database.GetOnce(&user, "select login, password from users where login = $1 and password = $2", u.Login, u.Password)
-
-	fmt.Println(dbreq)
-	if dbreq != nil {
-		log.Println("login")
-		token, err := creatToken(u.ID)
-		if err != nil {
-			return "", http.StatusBadRequest
-		}
-		return token, http.StatusOK
+func (u *user) authMethod() (string, error) {
+	dbreq, err := database.GetOnce(u, "select login, password from users where login = $1 and password = $2", u.Login, u.Password)
+	if err != nil {
+		return "", err
 	}
+	usr, _ := dbreq.(*user)
 
-	return "", http.StatusBadRequest
+	log.Println(usr, dbreq)
+	token, err := creatToken(usr)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 
 }
 
 // creatToken code from
 //https://www.nexmo.com/blog/2020/03/13/using-jwt-for-authentication-in-a-golang-application-dr
-func creatToken(userid uint64) (string, error) {
-	os.Setenv("ACCESS_SECRET", "wefghjmsdfg") // this should be in an env file
-	atClaims := jwt.MapClaims{}
-	atClaims["authorized"] = true
-	atClaims["user_id"] = userid
-	atClaims["exp"] = time.Now().Add(time.Second * 15).Unix()
-	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
-	token, err := at.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
+func creatToken(u *user) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"auth":    true,
+		"user_id": u.ID,
+		"exp":     time.Now().Unix(),
+	})
+	key := sha256.Sum256([]byte(u.Login))
+	tokenString, err := token.SignedString(key[:])
 	if err != nil {
 		return "", err
 	}
-	return token, nil
+
+	return tokenString, nil
+}
+
+func ValidToken(tokenString string) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("")
+		}
+		return "huica", nil
+	})
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		fmt.Println(claims["user_id"])
+	} else {
+		fmt.Println(err)
+	}
 }
 
 /*
@@ -134,8 +153,11 @@ func (u *user) refreshToken(token string) {
 
 }
 */
+
 // Register new user
 func Register(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	u := user{}
 	defer r.Body.Close()
 	if r.Body == nil {
@@ -148,13 +170,19 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	_, err = database.ExecOnce(`insert into users (login, password, username)
-	values($1, $2, $3);`, u.Login, u.Password, u.Username)
+
+	_, err = database.GetOnce(&u, "select login, username, password where login=$1", u.Login)
 	if err != nil {
 		log.Println(err)
-		w.WriteHeader(http.StatusBadRequest)
 		return
+	} else if err == sql.ErrNoRows {
+		_, err = database.ExecOnce(`insert into users (login, password, username)
+	values($1, $2, $3);`, u.Login, u.Password, u.Username)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 	}
-
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 }

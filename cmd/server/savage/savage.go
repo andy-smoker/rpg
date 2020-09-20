@@ -14,10 +14,11 @@ import (
 func GetAllChars(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	char := swChar{}
 
-	rows := database.GetAll(&char, "select id, name, rank from chars")
-
+	rows, err := database.GetAll(&swChar{}, "select id, name, rank from chars")
+	if err != nil {
+		log.Println(err)
+	}
 	data, err := json.Marshal(rows)
 	if err != nil {
 		log.Println(err)
@@ -32,69 +33,66 @@ func CharID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	var (
-		status int
-		i      interface{}
+		err error
 	)
 
 	switch r.Method {
 	case "GET":
-		status, i = getCharShit(vars["id"])
+		row, err := getCharShit(vars["id"])
+		swCh, _ := row.(*swChar)
+		resp, err := json.Marshal(swCh)
+		if err != nil {
+			log.Println(err)
+		}
+		w.Write(resp)
 		break
 	case "PUT":
-		status, i = updateCharShit(vars["id"])
+		err = updateCharShit(vars["id"])
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 		break
 	case "DELETE":
-		status, i = deleteCharShit(vars["id"])
+		err = deleteCharShit(vars["id"])
+		if err != nil {
+			fmt.Println(err)
+		}
 		break
 	}
-	resp, err := json.Marshal(i)
-	if err != nil {
-		log.Println(err)
-	}
 
-	w.Header().Add("Status-code", fmt.Sprint(status))
-	w.Write(resp)
+	w.WriteHeader(http.StatusOK)
+
 }
 
-func getCharShit(id string) (status int, row interface{}) {
-	sw := swChar{}
-	row = database.GetOnce(&sw, "select id, name, rank from chars where id = $1", id)
-
-	if sw.ID == 0 {
-		status = http.StatusNotFound
-		row = nil
-		return
-
+func getCharShit(id string) (interface{}, error) {
+	row, err := database.GetOnce(&swChar{}, "select id, name, rank from chars where id = $1", id)
+	if err != nil {
+		return nil, err
 	}
-	status = http.StatusOK
-	return
+	return row, err
 }
 
-func updateCharShit(id string) (status int, row interface{}) {
-	sw := swChar{}
-	_, err := database.ExecOnce(&sw, "update swcharshit set name=$1 where id = $1", id)
+func updateCharShit(id string) error {
+	_, err := database.ExecOnce(&swChar{}, "update swcharshit set name=$1 where id = $1", id)
 	if err != nil {
-		log.Println(err)
-		status = http.StatusBadRequest
+		return err
 	}
-	status = http.StatusOK
-	return
+	return nil
 }
 
-func deleteCharShit(id string) (status int, row interface{}) {
-	sw := swChar{}
-	_, err := database.ExecOnce(&sw, "delete from swcharshit where id = $1", id)
+func deleteCharShit(id string) error {
+	_, err := database.ExecOnce(&swChar{}, "delete from swcharshit where id = $1", id)
 	if err != nil {
-		log.Println(err)
-		status = http.StatusBadRequest
+		return err
 	}
-	status = http.StatusOK
-	return
+	return nil
 }
 
 // AddChar .
 func AddChar(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "json")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	sw := swChar{}
 	err := json.NewDecoder(r.Body).Decode(&sw)
 	if err != nil {
@@ -117,53 +115,16 @@ func AddChar(w http.ResponseWriter, r *http.Request) {
 
 // GetAllRaces - get all race name from database
 func GetAllRaces(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	race := stRace{}
-	arr := database.GetAll(&race, "select race_id,race_name from sw_racelist")
-
+	arr, err := database.GetAll(&race, "select race_id,race_name from sw_racelist")
+	if err != nil {
+		log.Println(err)
+	}
 	data, err := json.Marshal(arr)
 	if err != nil {
 		log.Println(err)
 	}
 	w.Write(data)
 }
-
-/*
-// GetAbility - get ability from database
-func GetRace(w http.ResponseWriter, r *http.Request) {
-
-}
-
-// GetAllAbilities - get all abilities from database
-func GetAllAbilities(w http.ResponseWriter, r *http.Request) {
-
-}
-
-// GetAbility - get ability from database
-func GetAbility(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func GetAllTraits(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func GetTrait(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func GetAllFlaws(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func GetFlaw(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func GetAllItems(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func GetItem(w http.ResponseWriter, r *http.Request) {
-
-}
-*/

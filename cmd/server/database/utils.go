@@ -26,17 +26,17 @@ type newDest interface {
 }
 
 // GetAll return all rows from posgres table
-func GetAll(d newDest, query string, args ...interface{}) []interface{} {
+func GetAll(d newDest, query string, args ...interface{}) ([]interface{}, error) {
 	var arr []interface{}
 	db, err := sql.Open(dataPosgresConn())
 	if err != nil {
-		log.Println(err)
+		return nil, err
 	}
 	defer db.Close()
 
 	rows, err := db.Query(query, args...)
 	if err != nil {
-		log.Println(err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -49,23 +49,22 @@ func GetAll(d newDest, query string, args ...interface{}) []interface{} {
 		}
 		arr = append(arr, obj)
 	}
-	return arr
+	return arr, nil
 }
 
 // GetOnce return one row from posgres table
-func GetOnce(d newDest, query string, args ...interface{}) interface{} {
+func GetOnce(d newDest, query string, args ...interface{}) (interface{}, error) {
 	obj, dest := d.Args()
 	db, err := sql.Open(dataPosgresConn())
 	if err != nil {
-		log.Println(err)
-		return nil
+		return nil, err
 	}
 	defer db.Close()
 
 	rows, err := db.Query(query, args...)
 	if err != nil {
 		log.Println(err)
-		return nil
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -76,10 +75,9 @@ func GetOnce(d newDest, query string, args ...interface{}) interface{} {
 			log.Println(err)
 			continue
 		}
-		fmt.Println(obj)
-		return obj
+		return obj, nil
 	}
-	return nil
+	return nil, sql.ErrNoRows
 }
 
 // ExecOnce fanc for add/delet/upgrade row form posgres table

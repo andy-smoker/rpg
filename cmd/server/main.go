@@ -14,8 +14,7 @@ import (
 func main() {
 	r := mux.NewRouter()
 	SWroutes(r)
-
-	r.HandleFunc("/auth", auth.AuthHandler)
+	mainRoute(r)
 
 	srv := &http.Server{
 		Handler:      r,
@@ -25,6 +24,11 @@ func main() {
 	}
 
 	log.Fatal(srv.ListenAndServe())
+}
+
+func mainRoute(r *mux.Router) {
+	r.HandleFunc("/auth", auth.AuthHandler).Methods("POST")
+	r.HandleFunc("/reg", auth.Register).Methods("POST")
 }
 
 // SWroutes .
