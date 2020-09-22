@@ -27,6 +27,7 @@ func main() {
 }
 
 func mainRoute(r *mux.Router) {
+
 	r.HandleFunc("/auth", auth.Auth).Methods("POST")
 	r.HandleFunc("/reg", auth.Register).Methods("POST")
 }
@@ -34,6 +35,7 @@ func mainRoute(r *mux.Router) {
 // SWroutes .
 func SWroutes(r *mux.Router) {
 	prefix := "/sw"
+	r.Use(auth.Middleware)
 	r.HandleFunc(prefix+"/chars", savage.GetAllChars).Methods("GET")
 	r.HandleFunc(prefix+"/chars/ch{id}", savage.CharID).Methods("GET", "PUT", "DELETE")
 	r.HandleFunc(prefix+"/chars/add", savage.AddChar).Methods("POST")
