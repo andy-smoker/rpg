@@ -10,12 +10,53 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// SWChar - struct charshit
+type swChar struct {
+	ID       int
+	UserName string `json:"username"`
+	CharName string `json:"name"`
+
+	Concept string `json:"concept"`
+	Race    string `json:"race"`
+
+	Exp    int    `json:"exp"`
+	Rank   string `json:"rank"`
+	Points int    `json:"points"`
+
+	Stats      []stat    `json:"stats"`
+	Skills     []skill   `json:"skills"`
+	Traits     []trait   `json:"trait"`
+	Flaws      []flaw    `json:"flaws"`
+	Abilities  []ability `json:"abilities"`
+	PowerPoint int       `json:"power_points"`
+	Inventory  []item    `json:"inventory"`
+	Look       string    `json:"look"`
+	About      string    `json:"about"`
+}
+
+func (*swChar) Args(q interface{}) func() (interface{}, []interface{}) {
+	st := swChar{}
+	var arr []interface{}
+	if q.(string) == "*" {
+
+		return func() (interface{}, []interface{}) {
+			arr = append(arr, &st.ID, &st.CharName, &st.Rank)
+			return &st, arr
+		}
+
+	}
+
+	return nil
+}
+
 // GetAllChars -get all charshit from database
 func GetAllChars(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	rows, err := database.GetAll(&swChar{}, "select id, name, rank from chars")
+	fmt.Println(r.Header.Get("Authorization"))
+	log.Println(r.Body)
+	sw := swChar{}
+	rows, err := database.GetAll(sw.Args("*"), "select id, name, rank from chars")
 	if err != nil {
 		log.Println(err)
 	}
@@ -38,13 +79,13 @@ func CharID(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		row, err := getCharShit(vars["id"])
-		swCh, _ := row.(*swChar)
-		resp, err := json.Marshal(swCh)
+		//row, err := getCharShit(vars["id"])
+		//swCh, _ := row.(*swChar)
+		//resp, err := json.Marshal(swCh)
 		if err != nil {
 			log.Println(err)
 		}
-		w.Write(resp)
+		//w.Write(resp)
 		break
 	case "PUT":
 		err = updateCharShit(vars["id"])
@@ -65,6 +106,7 @@ func CharID(w http.ResponseWriter, r *http.Request) {
 
 }
 
+/*
 func getCharShit(id string) (interface{}, error) {
 	row, err := database.GetOnce(&swChar{}, "select id, name, rank from chars where id = $1", id)
 	if err != nil {
@@ -72,6 +114,7 @@ func getCharShit(id string) (interface{}, error) {
 	}
 	return row, err
 }
+*/
 
 func updateCharShit(id string) error {
 	_, err := database.ExecOnce(&swChar{}, "update swcharshit set name=$1 where id = $1", id)
@@ -110,9 +153,10 @@ func AddChar(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	fmt.Fprintln(w, "Успешно добвален: ", lastID)
+	fmt.Println("Успешно добвален: ", lastID)
 }
 
+/*
 // GetAllRaces - get all race name from database
 func GetAllRaces(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -128,3 +172,4 @@ func GetAllRaces(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(data)
 }
+*/
