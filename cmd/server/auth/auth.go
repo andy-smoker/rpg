@@ -1,17 +1,13 @@
 package auth
 
 import (
-	"crypto/sha256"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"server/database"
 	"time"
-
-	"github.com/dgrijalva/jwt-go"
 )
 
 var tempDB = []user{
@@ -45,87 +41,6 @@ func (*user) Args() (r interface{}, arr []interface{}) {
 	return
 }
 
-// Auth .
-func Auth(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	u := user{}
-	defer r.Body.Close()
-	if r.Body == nil {
-		return
-	}
-
-	err := json.NewDecoder(r.Body).Decode(&u)
-	if err != nil {
-		if err == io.EOF {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("null"))
-		}
-		return
-	}
-
-	token, err := u.authMethod()
-	if err != nil {
-		log.Print(err)
-		w.Header().Set("Status-code", fmt.Sprint(http.StatusBadRequest))
-		w.Write([]byte("login or pass not exist"))
-		return
-	}
-
-	w.Header().Set("Token", token)
-	w.WriteHeader(http.StatusFound)
-
-}
-
-func (u *user) authMethod() (string, error) {
-	dbreq, err := database.GetOnce(u, "select login, password from users where login = $1 and password = $2", u.Login, u.Password)
-	if err != nil {
-		return "", err
-	}
-	usr, _ := dbreq.(*user)
-
-	log.Println(usr, dbreq)
-	token, err := creatToken(usr)
-	if err != nil {
-		return "", err
-	}
-	return token, nil
-
-}
-
-// creatToken code from
-//https://www.nexmo.com/blog/2020/03/13/using-jwt-for-authentication-in-a-golang-application-dr
-func creatToken(u *user) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"auth":    true,
-		"user_id": u.ID,
-		"time":    time.Now().Unix(),
-	})
-	key := sha256.Sum256([]byte(u.Login)) // make sha256 key-secret
-	tokenString, err := token.SignedString(key[:])
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
-// ValidToken func for chek valid token
-func ValidToken(tokenString string) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("")
-		}
-		return "huica", nil
-	})
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		fmt.Println(claims["user_id"], claims["time"])
-	} else {
-		fmt.Println(err)
-	}
-}
-
 /*
 func (u *user) refreshToken(token string) {
 	db, err := sql.Open(database.DBConnect())
@@ -147,7 +62,7 @@ func (u *user) refreshToken(token string) {
 // Register new user
 func Register(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Access-Control-Allow-Origin", "*")
 	u := user{}
 	defer r.Body.Close()
 	if r.Body == nil {
