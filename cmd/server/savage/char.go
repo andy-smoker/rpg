@@ -38,10 +38,9 @@ func (*swChar) Args(q interface{}) func() (interface{}, []interface{}) {
 	st := swChar{}
 	var arr []interface{}
 	if q.(string) == "*" {
-
+		arr = append(arr, &st.ID, &st.CharName, &st.Rank)
 		return func() (interface{}, []interface{}) {
-			arr = append(arr, &st.ID, &st.CharName, &st.Rank)
-			return &st, arr
+			return st, arr
 		}
 
 	}
@@ -79,13 +78,13 @@ func CharID(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		//row, err := getCharShit(vars["id"])
-		//swCh, _ := row.(*swChar)
-		//resp, err := json.Marshal(swCh)
+		row, err := getCharShit(vars["id"])
+		swCh, _ := row.(*swChar)
+		resp, err := json.Marshal(swCh)
 		if err != nil {
 			log.Println(err)
 		}
-		//w.Write(resp)
+		w.Write(resp)
 		break
 	case "PUT":
 		err = updateCharShit(vars["id"])
@@ -106,18 +105,17 @@ func CharID(w http.ResponseWriter, r *http.Request) {
 
 }
 
-/*
 func getCharShit(id string) (interface{}, error) {
-	row, err := database.GetOnce(&swChar{}, "select id, name, rank from chars where id = $1", id)
+	sw := swChar{}
+	row, err := database.GetOnce(sw.Args("*"), "select id, name, rank from chars where id = $1", id)
 	if err != nil {
 		return nil, err
 	}
 	return row, err
 }
-*/
 
 func updateCharShit(id string) error {
-	_, err := database.ExecOnce(&swChar{}, "update swcharshit set name=$1 where id = $1", id)
+	_, err := database.ExecOnce("update swcharshit set name=$1 where id = $1", id)
 	if err != nil {
 		return err
 	}
@@ -125,7 +123,7 @@ func updateCharShit(id string) error {
 }
 
 func deleteCharShit(id string) error {
-	_, err := database.ExecOnce(&swChar{}, "delete from swcharshit where id = $1", id)
+	_, err := database.ExecOnce("delete from swcharshit where id = $1", id)
 	if err != nil {
 		return err
 	}
@@ -142,7 +140,7 @@ func AddChar(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	res, err := database.ExecOnce(&sw, `insert into swcharshit(charname,username, concepid, raceid, epx, rank, points)
+	res, err := database.ExecOnce(`insert into swcharshit(charname,username, concepid, raceid, epx, rank, points)
 	values($1,2$,3$,4$,5$,6$)`, sw.CharName, sw.UserName, sw.Concept, sw.Race, sw.Exp, sw.Rank, sw.Points)
 	if err != nil {
 		log.Println(err)

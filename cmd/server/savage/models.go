@@ -1,36 +1,5 @@
 package savage
 
-// SWChar - struct charshit
-type swChar struct {
-	ID       int
-	UserName string `json:"username"`
-	CharName string `json:"name"`
-
-	Concept string `json:"concept"`
-	Race    string `json:"race"`
-
-	Exp    int    `json:"exp"`
-	Rank   string `json:"rank"`
-	Points int    `json:"points"`
-
-	Stats      []stat    `json:"stats"`
-	Skills     []skill   `json:"skills"`
-	Traits     []trait   `json:"trait"`
-	Flaws      []flaw    `json:"flaws"`
-	Abilities  []ability `json:"abilities"`
-	PowerPoint int       `json:"power_points"`
-	Inventory  []item    `json:"inventory"`
-	Look       string    `json:"look"`
-	About      string    `json:"about"`
-}
-
-func (*swChar) Args() (r interface{}, arr []interface{}) {
-	st := swChar{}
-	arr = append(arr, &st.ID, &st.CharName, &st.Rank)
-	r = &st
-	return
-}
-
 // Ability -
 type ability struct {
 	ID       int64
@@ -63,16 +32,6 @@ type flaw struct {
 	Influence string      `json:"influence"`
 	Debuff    interface{} `json:"debuff"`
 	About     string      `json:"about"`
-}
-
-type item struct {
-	ID     int64
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Price  int    `json:"price"`
-	Weight int    `json:"weight"`
-	Stats  []stat `json:"stats"`
-	Note   string `json:"note"`
 }
 
 type stRace struct {

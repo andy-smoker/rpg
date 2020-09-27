@@ -54,7 +54,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = database.GetOnce(&user{}, "select login, password from users where login = $1 and password = $2", u.Login, u.Password)
+	_, err = database.GetOnce(u.Args(), "select login, password from users where login = $1 and password = $2", u.Login, u.Password)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("login or password is invalid"))

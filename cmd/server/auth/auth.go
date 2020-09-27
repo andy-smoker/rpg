@@ -34,11 +34,14 @@ type Session struct {
 	Timeout time.Time
 }
 
-func (*user) Args() (r interface{}, arr []interface{}) {
+func (*user) Args() func() (interface{}, []interface{}) {
+	var arr []interface{}
 	u := user{}
-	arr = append(arr, &u.Login, &u.Password)
-	r = &u
-	return
+
+	return func() (interface{}, []interface{}) {
+		arr = append(arr, &u.Login, &u.Password)
+		return &u, arr
+	}
 }
 
 /*
@@ -76,7 +79,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = database.GetOnce(&u, "select login, username, password where login=$1", u.Login)
+	_, err = database.GetOnce(u.Args(), "select login, username, password where login=$1", u.Login)
 	if err != nil {
 		log.Println(err)
 		return

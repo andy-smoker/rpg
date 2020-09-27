@@ -20,13 +20,8 @@ func dataPosgresConn() (driver string, datasourceName string) {
 	return
 }
 
-// create dest for sql scan
-type newDest interface {
-	Args() (interface{}, []interface{})
-}
-
 // GetAll return all rows from posgres table
-func GetAll(d newDest, query string, args ...interface{}) ([]interface{}, error) {
+func GetAll(d func() (interface{}, []interface{}), query string, args ...interface{}) ([]interface{}, error) {
 	var arr []interface{}
 	db, err := sql.Open(dataPosgresConn())
 	if err != nil {
@@ -39,22 +34,26 @@ func GetAll(d newDest, query string, args ...interface{}) ([]interface{}, error)
 		return nil, err
 	}
 	defer rows.Close()
-
+	obj, dest := d()
 	for rows.Next() {
-		obj, dest := d.Args()
+
 		err := rows.Scan(dest...)
+
 		if err != nil {
 			log.Println(err)
 			continue
 		}
+		fmt.Println(obj)
+		fmt.Println(arr)
 		arr = append(arr, obj)
+		obj, dest = d()
 	}
 	return arr, nil
 }
 
 // GetOnce return one row from posgres table
-func GetOnce(d newDest, query string, args ...interface{}) (interface{}, error) {
-	obj, dest := d.Args()
+func GetOnce(d func() (interface{}, []interface{}), query string, args ...interface{}) (interface{}, error) {
+	obj, dest := d()
 	db, err := sql.Open(dataPosgresConn())
 	if err != nil {
 		return nil, err
@@ -81,7 +80,7 @@ func GetOnce(d newDest, query string, args ...interface{}) (interface{}, error) 
 }
 
 // ExecOnce fanc for add/delet/upgrade row form posgres table
-func ExecOnce(obj interface{}, query string, args ...interface{}) (sql.Result, error) {
+func ExecOnce(query string, args ...interface{}) (sql.Result, error) {
 	db, err := sql.Open(dataPosgresConn())
 	if err != nil {
 		log.Println(err)
