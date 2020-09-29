@@ -35,12 +35,14 @@ type swChar struct {
 }
 
 func (*swChar) Args(q interface{}) func() (interface{}, []interface{}) {
-	st := swChar{}
-	var arr []interface{}
+
 	if q.(string) == "*" {
-		arr = append(arr, &st.ID, &st.CharName, &st.Rank)
+
 		return func() (interface{}, []interface{}) {
-			return st, arr
+			st := swChar{}
+			var arr []interface{}
+			arr = append(arr, &st.ID, &st.CharName, &st.Rank)
+			return &st, arr
 		}
 
 	}
@@ -84,6 +86,7 @@ func CharID(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err)
 		}
+		fmt.Println(string(resp))
 		w.Write(resp)
 		break
 	case "PUT":
@@ -101,7 +104,8 @@ func CharID(w http.ResponseWriter, r *http.Request) {
 		break
 	}
 
-	w.WriteHeader(http.StatusOK)
+	//w.WriteHeader(http.StatusOK)
+	return
 
 }
 

@@ -120,10 +120,11 @@ func (i *item) DeleteItem() {
 
 // AllItems .
 func (*item) AllItems() ([]interface{}, error) {
-	i := item{}
-	var arr []interface{}
-	arr = append(arr, &i.Name, &i.Type)
+
 	return database.GetAll(func() (interface{}, []interface{}) {
+		i := item{}
+		var arr []interface{}
+		arr = append(arr, &i.Name, &i.Type)
 
 		return i, arr
 	}, "select item_name, item_type from items")

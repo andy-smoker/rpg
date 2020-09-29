@@ -22,7 +22,8 @@ func dataPosgresConn() (driver string, datasourceName string) {
 
 // GetAll return all rows from posgres table
 func GetAll(d func() (interface{}, []interface{}), query string, args ...interface{}) ([]interface{}, error) {
-	var arr []interface{}
+	arr := make([]interface{}, 0)
+
 	db, err := sql.Open(dataPosgresConn())
 	if err != nil {
 		return nil, err
@@ -34,19 +35,18 @@ func GetAll(d func() (interface{}, []interface{}), query string, args ...interfa
 		return nil, err
 	}
 	defer rows.Close()
-	obj, dest := d()
-	for rows.Next() {
 
+	for rows.Next() {
+		obj, dest := d()
 		err := rows.Scan(dest...)
 
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-		fmt.Println(obj)
-		fmt.Println(arr)
+
 		arr = append(arr, obj)
-		obj, dest = d()
+
 	}
 	return arr, nil
 }
@@ -74,6 +74,7 @@ func GetOnce(d func() (interface{}, []interface{}), query string, args ...interf
 			log.Println(err)
 			continue
 		}
+		fmt.Println(obj)
 		return obj, nil
 	}
 	return nil, sql.ErrNoRows
