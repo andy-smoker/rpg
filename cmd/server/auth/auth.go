@@ -11,14 +11,13 @@ import (
 )
 
 var tempDB = []user{
-	user{ID: 1, Username: "Igor", Password: "111"},
-	user{ID: 2, Username: "Jija", Password: "555"},
+	user{Username: "Igor", Password: "111"},
+	user{Username: "Jija", Password: "555"},
 }
 
 //
 // User is user of programm
 type user struct {
-	ID                uint64 `json:"id"`
 	Login             string `json:"login"`
 	Username          string `json:"username"`
 	Email             string `json:"email"`
