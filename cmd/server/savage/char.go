@@ -13,7 +13,7 @@ import (
 // SWChar - struct charshit
 type swChar struct {
 	ID       int
-	UserName string `json:"username"`
+	Owner    string `json:"owner"`
 	CharName string `json:"name"`
 
 	Concept string `json:"concept"`
@@ -23,15 +23,15 @@ type swChar struct {
 	Rank   string `json:"rank"`
 	Points int    `json:"points"`
 
-	Stats      []stat    `json:"stats"`
-	Skills     []skill   `json:"skills"`
-	Traits     []trait   `json:"trait"`
-	Flaws      []flaw    `json:"flaws"`
-	Abilities  []ability `json:"abilities"`
-	PowerPoint int       `json:"power_points"`
-	Inventory  []item    `json:"inventory"`
-	Look       string    `json:"look"`
-	About      string    `json:"about"`
+	Stats      []stat   `json:"stats"`
+	Skills     []string `json:"skills"`
+	Traits     []string `json:"trait"`
+	Flaws      []string `json:"flaws"`
+	Abilities  []string `json:"abilities"`
+	PowerPoint int      `json:"power_points"`
+	Inventory  []stItem `json:"inventory"`
+	Look       string   `json:"look"`
+	About      string   `json:"about"`
 }
 
 func (*swChar) Args(q interface{}) func() (interface{}, []interface{}) {
@@ -41,7 +41,7 @@ func (*swChar) Args(q interface{}) func() (interface{}, []interface{}) {
 		return func() (interface{}, []interface{}) {
 			st := swChar{}
 			var arr []interface{}
-			arr = append(arr, &st.ID, &st.CharName, &st.Rank)
+			arr = append(arr, &st.ID, &st.CharName, &st.Rank, &st.Inventory)
 			return &st, arr
 		}
 
@@ -85,6 +85,8 @@ func CharID(w http.ResponseWriter, r *http.Request) {
 		resp, err := json.Marshal(swCh)
 		if err != nil {
 			log.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 		fmt.Println(string(resp))
 		w.Write(resp)
@@ -93,6 +95,7 @@ func CharID(w http.ResponseWriter, r *http.Request) {
 		err = updateCharShit(vars["id"])
 		if err != nil {
 			fmt.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		break
@@ -100,11 +103,13 @@ func CharID(w http.ResponseWriter, r *http.Request) {
 		err = deleteCharShit(vars["id"])
 		if err != nil {
 			fmt.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 		break
 	}
 
-	//w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 	return
 
 }
@@ -119,7 +124,7 @@ func getCharShit(id string) (interface{}, error) {
 }
 
 func updateCharShit(id string) error {
-	_, err := database.ExecOnce("update swcharshit set name=$1 where id = $1", id)
+	_, err := database.ExecOnce("update chars set name=$1 where id = $1", id)
 	if err != nil {
 		return err
 	}
@@ -127,7 +132,7 @@ func updateCharShit(id string) error {
 }
 
 func deleteCharShit(id string) error {
-	_, err := database.ExecOnce("delete from swcharshit where id = $1", id)
+	_, err := database.ExecOnce("delete from chars where id = $1", id)
 	if err != nil {
 		return err
 	}
@@ -144,8 +149,8 @@ func AddChar(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	res, err := database.ExecOnce(`insert into swcharshit(charname,username, concepid, raceid, epx, rank, points)
-	values($1,2$,3$,4$,5$,6$)`, sw.CharName, sw.UserName, sw.Concept, sw.Race, sw.Exp, sw.Rank, sw.Points)
+	res, err := database.ExecOnce(`insert into chars(charname,owner, concepid, raceid, epx, rank, points)
+	values($1,2$,3$,4$,5$,6$)`, sw.CharName, sw.Owner, sw.Concept, sw.Race, sw.Exp, sw.Rank, sw.Points)
 	if err != nil {
 		log.Println(err)
 		return
@@ -157,21 +162,3 @@ func AddChar(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("Успешно добвален: ", lastID)
 }
-
-/*
-// GetAllRaces - get all race name from database
-func GetAllRaces(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	race := stRace{}
-	arr, err := database.GetAll(&race, "select race_id,race_name from sw_racelist")
-	if err != nil {
-		log.Println(err)
-	}
-	data, err := json.Marshal(arr)
-	if err != nil {
-		log.Println(err)
-	}
-	w.Write(data)
-}
-*/
