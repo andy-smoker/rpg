@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type item struct {
+type stItem struct {
 	ID     int64
 	Name   string `json:"name"`
 	Type   string `json:"type"`
@@ -27,8 +27,8 @@ func ItemMidleware(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	vars := mux.Vars(r)
-	i := item{}
-	itemsArr := []item{}
+	i := stItem{}
+	itemsArr := []stItem{}
 	id := vars["id"]
 	if id == "all" && r.Method == "GET" {
 		rows, err := i.AllItems()
@@ -38,7 +38,7 @@ func ItemMidleware(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		for _, row := range rows {
-			i, ok := row.(item)
+			i, ok := row.(stItem)
 			if !ok {
 				continue
 			}
@@ -58,7 +58,7 @@ func ItemMidleware(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		data, ok := row.(*item)
+		data, ok := row.(*stItem)
 		log.Println(data)
 		if !ok {
 			return
@@ -90,12 +90,8 @@ func ItemMidleware(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (i *item) DropItemFromInventory() {
-
-}
-
-func (*item) GetItem(id string) (interface{}, error) {
-	i := item{}
+func (*stItem) GetItem(id string) (interface{}, error) {
+	i := stItem{}
 	var arr []interface{}
 	arr = append(arr, &i.Name, &i.Type)
 	return database.GetOnce(func() (interface{}, []interface{}) {
@@ -103,7 +99,7 @@ func (*item) GetItem(id string) (interface{}, error) {
 	}, "select item_name, item_type from items where item_id = $1", id)
 }
 
-func (i *item) AddItem() error {
+func (i *stItem) AddItem() error {
 
 	_, err := database.ExecOnce(
 		`insert into items(item_name,item_type, item_price, item_weight, item_stats, item_about)
@@ -114,15 +110,15 @@ func (i *item) AddItem() error {
 	return nil
 }
 
-func (i *item) DeleteItem() {
+func (i *stItem) DeleteItem() {
 	fmt.Print(i)
 }
 
 // AllItems .
-func (*item) AllItems() ([]interface{}, error) {
+func (*stItem) AllItems() ([]interface{}, error) {
 
 	return database.GetAll(func() (interface{}, []interface{}) {
-		i := item{}
+		i := stItem{}
 		var arr []interface{}
 		arr = append(arr, &i.Name, &i.Type)
 
@@ -130,7 +126,43 @@ func (*item) AllItems() ([]interface{}, error) {
 	}, "select item_name, item_type from items")
 }
 
-// AillItemInventory .
-func AillItemInventory() {
+// AllItemInventory .
+func AllItemInventory(charID int) ([]interface{}, error) {
+	inventory, err := database.GetAll(func() (interface{}, []interface{}) {
+		var (
+			i   int64
+			arr []interface{}
+		)
+		return i, arr
+	}, "select inventory from chars where id = $1", charID)
+	if err != nil {
+		return nil, err
+	}
+	return inventory, nil
+}
 
+func (i *stItem) AddItemInInventory(charID int) error {
+
+	inventory, err := AllItemInventory(charID)
+	inventory = append(inventory, i.ID)
+	_, err = database.ExecOnce("update chars set inventory = $1  where id = $2", inventory, i.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+
+func (i *stItem) DropItemFromInventory(itemID int, charID int) error {
+	inventory, err := AllItemInventory(charID)
+	for index, id := range inventory {
+		if id == itemID {
+			inventory = append(inventory[:index], inventory[index+1:]...)
+		}
+	}
+	_, err = database.ExecOnce("update chars set inventory = $1  where id = $2", inventory, i.ID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
