@@ -3,6 +3,7 @@ package auth
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -10,14 +11,9 @@ import (
 	"time"
 )
 
-var tempDB = []user{
-	user{Username: "Igor", Password: "111"},
-	user{Username: "Jija", Password: "555"},
-}
-
 //
 // User is user of programm
-type user struct {
+type User struct {
 	Login             string `json:"login"`
 	Username          string `json:"username"`
 	Email             string `json:"email"`
@@ -25,17 +21,70 @@ type user struct {
 	EncriptedPassword string `json:"encpass"`
 }
 
+// getUser use filtre values for spesiol return
+func getUser(u *User) (*User, error) {
+	row, err := database.GetOnce(func() (interface{}, []interface{}) {
+		var arr []interface{}
+		u := User{}
+		arr = append(arr, u.Login, u.Password, u.Email, u.Username)
+		return &u, arr
+	}, "select * from rpg_users where login=$1 password=$2", u.Login, u.Password)
+	if err != nil {
+		return nil, err
+	}
+	return row.(*User), nil
+}
+
 // Session .
 type Session struct {
-	User    user   `json:"user"`
+	User    string `json:"user"`
 	Token   string `json:"token"`
 	Key     int
 	Timeout time.Time
 }
 
-func (*user) Args() func() (interface{}, []interface{}) {
+func newSession(u User, token string) error {
+	s := Session{
+		User:    u.Login,
+		Token:   token,
+		Timeout: time.Now().Add(2 * time.Minute),
+	}
+	_, err := database.ExecOnce("insert into sessions(u_login, u_token, timeout) values($1,$2,$3)", s.User, s.Timeout)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Session) valid() error {
+	row, err := database.GetOnce(func() (interface{}, []interface{}) {
+		var arr []interface{}
+		ses := Session{}
+		arr = append(arr, ses.User, ses.Token, ses.Timeout)
+		return &ses, arr
+	}, "select * from sessions where u_login = $1", s.User)
+	if err == sql.ErrNoRows {
+		return fmt.Errorf("not exist")
+	} else if err != nil {
+		return err
+	}
+	ses, ok := row.(*Session)
+	if !ok {
+		return fmt.Errorf("Format error")
+	}
+	if ses.Token != s.Token {
+		return fmt.Errorf("Token is invalid")
+	}
+	if t := time.Now().Sub(ses.Timeout); t < 0 {
+		return fmt.Errorf("Token is axpired")
+	}
+
+	return nil
+}
+
+func (*User) Args() func() (interface{}, []interface{}) {
 	var arr []interface{}
-	u := user{}
+	u := User{}
 
 	return func() (interface{}, []interface{}) {
 		arr = append(arr, &u.Login, &u.Password)
@@ -65,7 +114,7 @@ func (u *user) refreshToken(token string) {
 func Register(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
-	u := user{}
+	u := User{}
 	defer r.Body.Close()
 	if r.Body == nil {
 		return

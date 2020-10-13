@@ -1,11 +1,11 @@
 package auth
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"server/database"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -46,7 +46,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	defer r.Body.Close()
 
-	u := user{}
+	u := User{}
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -54,44 +54,57 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = database.GetOnce(u.Args(), "select login, password from users where login = $1 and password = $2", u.Login, u.Password)
+	_, err = getUser(&u)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("login or password is invalid"))
 		return
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"admin": false,
-		"login": u.Login,
-		"exp":   time.Now().Unix(),
-	})
-
-	t, err := token.SignedString([]byte("huita"))
+	t := CreatToken(u)
+	if _, ok := t.(error); ok {
+		log.Println(t)
+		return
+	}
+	tokenString := t.(string)
+	err = newSession(u, tokenString)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-
-	isLogginedIn[t] = u.Login
+	isLogginedIn[tokenString] = u.Login
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`{"token": "%s"}`, t)))
 	return
 }
 
-// ValidToken func for chek valid token
-func ValidToken(tokenString string) bool {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("")
-		}
-		return "huita", nil
+// CreatToken .
+func CreatToken(u User) interface{} {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"admin": false,
+		"login": u.Login,
+		"exp":   time.Now().Unix(),
 	})
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		fmt.Println(claims["user_id"], claims["time"])
-		return true
-	} else {
-		fmt.Println(err)
-		return false
+	var key interface{}
+	key, err := base64.StdEncoding.DecodeString(u.Login)
+	if err != nil {
+		return err
 	}
+
+	tokenString, err := token.SignedString(key)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	return tokenString
+}
+
+// ValidToken func for chek valid token
+func ValidToken(tokenString string, key interface{}) bool {
+	/*
+		короче, нужно создавать клейм, в него записывать логин и дебаг уровень(типа адин или нет)
+		и в него же вытягивать время токена из бд и сравнивать с поступающим токеном
+		так что еби могз додела и будет тебе коммит и пуш
+	*/
+	return true
 }
