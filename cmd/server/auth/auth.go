@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"server/database"
-	"time"
 )
 
 //
@@ -39,17 +38,18 @@ func getUser(u *User) (*User, error) {
 type Session struct {
 	User    string `json:"user"`
 	Token   string `json:"token"`
-	Key     int
-	Timeout time.Time
+	Timeout int64
+	Key     interface{}
 }
 
-func newSession(u User, token string) error {
+func newSession(u User, timeOut int64, token string, key interface{}) error {
 	s := Session{
 		User:    u.Login,
 		Token:   token,
-		Timeout: time.Now().Add(2 * time.Minute),
+		Timeout: timeOut,
+		Key:     key,
 	}
-	_, err := database.ExecOnce("insert into sessions(u_login, u_token, timeout) values($1,$2,$3)", s.User, s.Timeout)
+	_, err := database.ExecOnce("insert into sessions(s_login, s_token, s_timeout, s_key) values($1,$2,$3,$4)", s.User, s.Timeout, s.Key)
 	if err != nil {
 		return err
 	}
@@ -74,9 +74,6 @@ func (s *Session) valid() error {
 	}
 	if ses.Token != s.Token {
 		return fmt.Errorf("Token is invalid")
-	}
-	if t := time.Now().Sub(ses.Timeout); t < 0 {
-		return fmt.Errorf("Token is axpired")
 	}
 
 	return nil

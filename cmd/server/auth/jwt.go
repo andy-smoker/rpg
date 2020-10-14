@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"server/database"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -53,20 +54,22 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("login or password is invalid"))
 		return
 	}
-
 	_, err = getUser(&u)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("login or password is invalid"))
 		return
 	}
-	t := CreatToken(u)
+	// создаём время таймаута токена
+	timeOut := time.Now().Add(time.Minute * 2).Unix()
+	// создаём токен
+	t := CreatToken(u, timeOut)
 	if _, ok := t.(error); ok {
 		log.Println(t)
 		return
 	}
 	tokenString := t.(string)
-	err = newSession(u, tokenString)
+	err = newSession(u, timeOut, tokenString, timeOut)
 	if err != nil {
 		log.Println(err)
 		return
@@ -79,12 +82,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreatToken .
-func CreatToken(u User) interface{} {
+func CreatToken(u User, now int64) interface{} {
+	// создаём токен
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"admin": false,
 		"login": u.Login,
 		"exp":   time.Now().Unix(),
 	})
+	// создаём ключ
 	var key interface{}
 	key, err := base64.StdEncoding.DecodeString(u.Login)
 	if err != nil {
@@ -100,11 +105,33 @@ func CreatToken(u User) interface{} {
 }
 
 // ValidToken func for chek valid token
-func ValidToken(tokenString string, key interface{}) bool {
-	/*
-		короче, нужно создавать клейм, в него записывать логин и дебаг уровень(типа адин или нет)
-		и в него же вытягивать время токена из бд и сравнивать с поступающим токеном
-		так что еби могз додела и будет тебе коммит и пуш
-	*/
-	return true
+func ValidToken(tokenString string, u User) bool {
+	// достаём из БД данные по сесии
+	row, err := database.GetOnce(func() (interface{}, []interface{}) {
+		var arr []interface{}
+		s := Session{}
+		arr = append(arr, s.User, s.Token, s.Timeout)
+		return &s, arr
+	}, "select * from sessions whith s_user = $1", u.Login)
+	if err != nil {
+		return false
+	}
+	session := row.(*Session) // парсим строку из БД в структуру
+	// сравниваем время таймаута с настоящим времинем
+	if time.Now().Unix() > session.Timeout {
+		return false
+	}
+	// создаём токен для верификации
+	vToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"admin": false,
+		"login": u.Login,
+		"exp":   session.Timeout,
+	})
+	vString, err := vToken.SignedString(session.Key)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+
+	return vString == tokenString
 }
