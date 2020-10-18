@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"server/database"
+	"time"
 )
 
 //
@@ -42,27 +43,37 @@ type Session struct {
 	Key     interface{}
 }
 
-func newSession(u User, timeOut int64, token string, key interface{}) error {
+// NewSession add session parametrs to DB
+func NewSession(u User, token string, key interface{}) error {
 	s := Session{
 		User:    u.Login,
 		Token:   token,
-		Timeout: timeOut,
+		Timeout: time.Now().Add(time.Minute * 2).Unix(),
 		Key:     key,
 	}
-	_, err := database.ExecOnce("insert into sessions(s_login, s_token, s_timeout, s_key) values($1,$2,$3,$4)", s.User, s.Timeout, s.Key)
+	var inKey string
+	for _, k := range key.([]byte) {
+		inKey = inKey + fmt.Sprintf("%d,", k)
+	}
+	inKey = inKey[:len(inKey)-1]
+	inKey = fmt.Sprintf("{%s}", inKey)
+
+	_, err := database.ExecOnce(`insert into sessions(s_user, s_token, s_key, s_timeout) 
+	values($1,$2,$3,$4)`, &s.User, &s.Token, inKey, &s.Timeout)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *Session) valid() error {
+// Valid .
+func (s *Session) Valid() error {
 	row, err := database.GetOnce(func() (interface{}, []interface{}) {
 		var arr []interface{}
 		ses := Session{}
-		arr = append(arr, ses.User, ses.Token, ses.Timeout)
+		arr = append(arr, &ses.User, &ses.Token, &ses.Timeout, &ses.Key)
 		return &ses, arr
-	}, "select * from sessions where u_login = $1", s.User)
+	}, "select * from sessions where s_user = $1", s.User)
 	if err == sql.ErrNoRows {
 		return fmt.Errorf("not exist")
 	} else if err != nil {
@@ -75,11 +86,16 @@ func (s *Session) valid() error {
 	if ses.Token != s.Token {
 		return fmt.Errorf("Token is invalid")
 	}
+	if ses.Timeout < time.Now().Unix() {
+		return fmt.Errorf("Timeout")
+	}
 
 	return nil
 }
 
-func (*User) Args() func() (interface{}, []interface{}) {
+//
+
+func (*User) args() func() (interface{}, []interface{}) {
 	var arr []interface{}
 	u := User{}
 
@@ -124,7 +140,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = database.GetOnce(u.Args(), "select login, username, password where login=$1", u.Login)
+	_, err = database.GetOnce(u.args(), "select login, username, password where login=$1", u.Login)
 	if err != nil {
 		log.Println(err)
 		return
@@ -136,6 +152,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		w.WriteHeader(http.StatusCreated)
 	}
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusFound)
 }

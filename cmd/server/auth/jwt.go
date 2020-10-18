@@ -60,21 +60,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("login or password is invalid"))
 		return
 	}
-	// создаём время таймаута токена
-	timeOut := time.Now().Add(time.Minute * 2).Unix()
+
 	// создаём токен
-	t := CreatToken(u, timeOut)
-	if _, ok := t.(error); ok {
-		log.Println(t)
-		return
-	}
-	tokenString := t.(string)
-	err = newSession(u, timeOut, tokenString, timeOut)
+	t, key, err := CreatToken(u)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	isLogginedIn[tokenString] = u.Login
+	err = NewSession(u, t.(string), key)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	isLogginedIn[t.(string)] = u.Login
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`{"token": "%s"}`, t)))
@@ -82,7 +80,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreatToken .
-func CreatToken(u User, now int64) interface{} {
+func CreatToken(u User) (interface{}, interface{}, error) {
 	// создаём токен
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"admin": false,
@@ -93,15 +91,15 @@ func CreatToken(u User, now int64) interface{} {
 	var key interface{}
 	key, err := base64.StdEncoding.DecodeString(u.Login)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	tokenString, err := token.SignedString(key)
 	if err != nil {
 		log.Println(err)
-		return nil
+		return nil, nil, err
 	}
-	return tokenString
+	return tokenString, key, nil
 }
 
 // ValidToken func for chek valid token
@@ -118,7 +116,7 @@ func ValidToken(tokenString string, u User) bool {
 	}
 	session := row.(*Session) // парсим строку из БД в структуру
 	// сравниваем время таймаута с настоящим времинем
-	if time.Now().Unix() > session.Timeout {
+	if time.Now().Unix() < session.Timeout {
 		return false
 	}
 	// создаём токен для верификации
