@@ -1,0 +1,12 @@
+.main {
+    display: grid;
+    grid-template-areas: 'auto';
+    grid-gap: 2px;
+}
+
+.cell {
+    height: 200px;
+}
+.cell textarea {
+    height: 90%;
+}

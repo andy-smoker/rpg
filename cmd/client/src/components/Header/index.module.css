@@ -1,0 +1,19 @@
+.header {
+    background-color: burlywood;
+    grid-area: head;
+    display: grid;
+    grid-template-areas: 
+    'img middle sigin';
+
+    grid-template-columns: 10% 70% 20% ;
+}
+
+.img{
+  width: 100%;
+  height: 100%;
+}
+
+
+.sigin {
+  background-color: green;
+}

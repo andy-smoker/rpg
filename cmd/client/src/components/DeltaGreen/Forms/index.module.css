@@ -1,0 +1,66 @@
+.cell{
+
+    background-color: wheat;
+    border: 2px solid black;
+}
+.cell input[type='text'] {
+    background-color: whitesmoke;
+    width: 90% ;
+    margin: 2px;
+}
+.cell textarea {
+    background-color: whitesmoke;
+    width: 95% ;
+    margin: 2px;
+}
+
+.cell p {
+    margin: 2px;
+}
+
+.title {
+    grid-area: auto;
+    writing-mode: sideways-lr;
+    color: white;
+    background-color: black;
+    
+}
+.title p {
+    margin-bottom: 25%;
+    margin-left: 1%;
+
+}
+
+.chsh {
+    display: grid;
+    grid-template-areas: 
+    'auto per per per'
+    'auto stat none psy'
+    'auto skill skill skill';
+
+    grid-template-columns: 5% 1fr 5% 1fr;
+    grid-template-rows: auto;
+    grid-gap: 2px;
+}
+
+.per{
+    grid-area: per;
+}
+.stat {
+    grid-area: stat;
+}
+
+.psy {
+    grid-area: psy;
+}
+
+.skill{
+    grid-area: skill;
+}
+
+.down {
+    width: 200px;
+    height: 50px;
+    margin-left: 100%;
+}
+

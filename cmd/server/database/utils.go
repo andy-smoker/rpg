@@ -85,6 +85,7 @@ func ExecOnce(query string, args ...interface{}) (sql.Result, error) {
 	db, err := sql.Open(dataPosgresConn())
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
 	defer db.Close()
 
@@ -95,4 +96,9 @@ func ExecOnce(query string, args ...interface{}) (sql.Result, error) {
 	}
 
 	return res, nil
+}
+
+// CeateTable - creating a table for specific tasks
+func CeateTable() {
+
 }

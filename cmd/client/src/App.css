@@ -1,0 +1,26 @@
+.main_page{
+  background-image: url(./images/mainback.jpg);
+
+  display: grid;
+  margin: 0 auto;
+
+  grid-template-areas: 
+  "head head head"
+  "side cont none"
+  "foo foo foo";
+
+  grid-template-rows: 10% 70% 20%;
+  grid-template-columns: 10% 80% 10%;
+  grid-gap: 2px;
+}
+
+
+
+.content {
+  grid-area: cont;
+  background-color:  #6da0a7;
+  min-height: 600px;
+  
+}
+
+

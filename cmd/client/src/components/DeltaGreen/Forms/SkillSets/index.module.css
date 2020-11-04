@@ -1,0 +1,11 @@
+.main {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.row {
+    display: grid;
+    grid-template-areas: auto;
+
+    grid-template-columns: 70% 30%;
+}

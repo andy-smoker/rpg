@@ -1,0 +1,9 @@
+.sidebar {
+  background-color: coral;
+  margin-left: 10px;
+  height: 200px;
+}
+
+.item {
+    color: darkgreen;
+}

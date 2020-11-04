@@ -1,0 +1,32 @@
+
+.stat_row{
+    margin: auto;
+    display: grid;
+    grid-template-areas: 
+    'auto';
+
+    grid-template-columns:30% 10% 9% 50%;
+    grid-template-rows: auto;
+
+    grid-gap: 2px;
+    
+}
+
+.cell{
+    grid-area: auto;    
+}
+.cell p {
+    margin: 2px;
+}
+
+.score {
+    grid-area: auto;
+}
+.score input {
+    width: 60%;
+}
+
+.dis input {
+    width: 90%;
+}
+

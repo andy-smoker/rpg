@@ -1,0 +1,4 @@
+.footer {
+    grid-area: foo;
+    background-color: burlywood;
+  }

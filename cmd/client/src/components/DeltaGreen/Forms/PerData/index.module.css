@@ -1,0 +1,63 @@
+.per_data {
+    
+    display: grid;
+    grid-template-areas: 
+    'name curator occup '
+    'prof  nation occup '
+    'gender age occup ';
+
+    grid-template-columns: 30% 30% 39.7% ;
+    grid-template-rows: auto;
+    grid-gap: 2px;
+}
+
+.ftitle {
+    grid-area: t;
+    writing-mode: vertical-lr;
+    writing-mode: sideways-lr;
+    color: white;
+    background-color: black;
+} 
+.ftitle p {
+    margin-left:3%;
+    margin-right: 3%;
+}
+
+.name {
+    grid-area: name;
+}
+
+.curator {
+    grid-area: curator;
+}
+
+.prof   {
+    grid-row: prof;
+}
+
+.nation {
+    grid-area: nation;
+}
+
+.gender {
+    grid-area: gender;
+}
+
+.age {
+    grid-row: age;
+}
+
+.occup {
+    grid-area: occup;
+    
+}
+
+.occup textarea {
+    min-width: 80% ;
+    height: 80%;
+    width: auto;
+}
+
+.occup p {
+    margin: 2px;
+}

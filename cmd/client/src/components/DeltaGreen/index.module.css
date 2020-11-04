@@ -1,0 +1,12 @@
+.nav{
+    background-color: cornflowerblue;
+    display: grid;
+    grid-template-areas: auto;
+
+    grid-template-columns: 30% 30% 30% ;
+}
+
+.nav button{
+    background-color: cornsilk;
+    width: 100%;
+}
